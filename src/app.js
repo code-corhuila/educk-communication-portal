@@ -922,6 +922,29 @@ async function loadConversation() {
   } catch (err) {
     console.error('Error cargando conversación:', err);
     showError('No se pudo conectar con el microservicio: ' + err.message);
+    if (messagesBody) {
+      messagesBody.innerHTML = `
+        <div class="chat-placeholder error-placeholder" style="text-align:center; padding: 2rem; color: #ef4444;">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+          <p style="font-weight: 600; margin-bottom: 0.25rem;">Servicio de mensajería no disponible</p>
+          <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 1rem;">No se pudieron cargar los mensajes desde el microservicio (${escapeHtml(err.message)}).</p>
+          <button id="btn-retry-chat" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Reintentar conexión</button>
+        </div>
+      `;
+      const btnRetry = document.getElementById('btn-retry-chat');
+      if (btnRetry) {
+        btnRetry.addEventListener('click', () => {
+          messagesBody.innerHTML = `
+            <div class="chat-placeholder">
+              <div class="spinner"></div>
+              <p>Reconectando con el microservicio...</p>
+            </div>
+          `;
+          hideError();
+          loadConversation();
+        });
+      }
+    }
   }
 }
 
