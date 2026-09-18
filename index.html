@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduTrack — Mensajería Padre-Profesor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-text">
+          <h2>EduTrack</h2>
+          <span>Sistemas Distribuidos</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="#" class="nav-item" data-view="dashboard">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-view="calificaciones">
+          <span class="nav-icon">📝</span>
+          <span>Calificaciones</span>
+        </a>
+        <a href="#" class="nav-item" data-view="asistencias">
+          <span class="nav-icon">📅</span>
+          <span>Asistencias</span>
+        </a>
+        <a href="#" class="nav-item active" data-view="mensajeria">
+          <span class="nav-icon">💬</span>
+          <span>Mensajería</span>
+          <span class="badge-pulse">MVP</span>
+        </a>
+        <a href="#" class="nav-item" data-view="notificaciones">
+          <span class="nav-icon">🔔</span>
+          <span>Notificaciones</span>
+          <span class="nav-badge" id="nav-notif-badge">2</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="backend-status" id="backend-status">
+          <span class="status-dot online"></span>
+          <span class="status-label">Backend: <strong id="backend-label">Conectado (8085)</strong></span>
+        </div>
+        <div class="user-chip">
+          <div class="avatar">XZ</div>
+          <div class="user-meta">
+            <strong>Ximena Zambrano</strong>
+            <small>Tutor / Acudiente</small>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Navbar -->
+      <header class="topbar">
+        <div class="breadcrumb" id="top-breadcrumb">
+          <span>EduTrack</span> &gt; <span id="bc-module">Comunicación</span> &gt; <strong class="current" id="bc-view">Chat Padre-Profesor</strong>
+        </div>
+        <div class="topbar-actions" id="topbar-actions">
+          <button id="btn-refresh" class="btn btn-secondary" title="Actualizar conversación">
+            🔄 Recargar
+          </button>
+        </div>
+      </header>
+
+      <!-- VIEW: Dashboard -->
+      <div id="view-dashboard" class="app-view">
+        <div class="view-scrollable">
+          <!-- Student Banner -->
+          <div class="student-banner">
+            <div class="student-info-left">
+              <div class="student-avatar-big">SZ</div>
+              <div>
+                <h2 style="font-size: 1.2rem; font-weight: 700;">Sofía Zambrano</h2>
+                <p style="font-size: 0.825rem; color: #94a3b8;">Grado 10-A • Jornada Mañana • Matrícula Activa #2026-1049</p>
+              </div>
+            </div>
+            <div class="quick-actions-bar">
+              <button class="btn-action-pill" data-nav-target="mensajeria">💬 Abrir Mensajería</button>
+              <button class="btn-action-pill" data-nav-target="calificaciones">📝 Calificaciones</button>
+              <button class="btn-action-pill" data-nav-target="asistencias">📅 Control Asistencias</button>
+              <button class="btn-action-pill" data-nav-target="notificaciones">🔔 Ver Alertas</button>
+            </div>
+          </div>
+
+          <!-- KPI Ribbon -->
+          <div class="kpi-ribbon" style="padding: 0;">
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <span class="kpi-title">Promedio Académico</span>
+                <span class="kpi-value" id="dash-kpi-promedio">4.4</span>
+                <small style="color: var(--success-green); font-weight: 600;">▲ Desempeño Alto</small>
+              </div>
+              <div class="kpi-icon">📈</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <span class="kpi-title">Tasa de Asistencia</span>
+                <span class="kpi-value" id="dash-kpi-asistencia">96.0%</span>
+                <small style="color: var(--text-muted);" id="dash-kpi-asistencia-sub">24 sesiones registradas</small>
+              </div>
+              <div class="kpi-icon">📅</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <span class="kpi-title">Mensajes en Chat</span>
+                <span class="kpi-value" id="dash-kpi-mensajes">0</span>
+                <small style="color: var(--primary-blue); cursor: pointer;" data-nav-target="mensajeria">Ir al chat →</small>
+              </div>
+              <div class="kpi-icon">💬</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <span class="kpi-title">Notificaciones Pendientes</span>
+                <span class="kpi-value" id="dash-kpi-notif" style="color: var(--error-red);">2</span>
+                <small style="color: var(--text-muted);">Alertas sin leer</small>
+              </div>
+              <div class="kpi-icon">🔔</div>
+            </div>
+          </div>
+
+          <!-- Grid: Progress by subject + Quick Reminders -->
+          <div class="dash-grid-2">
+            <!-- Progress by subject -->
+            <div class="card-box">
+              <div class="card-box-header">
+                <h3>📊 Rendimiento por Asignatura</h3>
+                <span class="badge-tag info">Corte 1 - 2026-B</span>
+              </div>
+              <div class="progress-list" id="dash-subject-progress">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Notes & Reminders -->
+            <div class="card-box">
+              <div class="card-box-header">
+                <h3>📌 Notas y Recordatorios de la Acudiente</h3>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Personal</span>
+              </div>
+              <div class="notes-container">
+                <form id="form-add-note" class="note-input-bar">
+                  <input type="text" id="note-input" class="form-input" placeholder="Añadir recordatorio o compromiso..." required>
+                  <button type="submit" class="btn btn-primary" style="height: auto; padding: 8px 14px;">Agregar</button>
+                </form>
+                <div id="notes-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity Table -->
+          <div class="card-box">
+            <div class="card-box-header">
+              <h3>⚡ Actividades y Eventos Recientes</h3>
+              <span class="badge-tag gray">Sincronizado</span>
+            </div>
+            <div class="data-table-container">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Detalle / Concepto</th>
+                    <th>Valor</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-recent-activities">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: Calificaciones -->
+      <div id="view-calificaciones" class="app-view">
+        <div class="view-scrollable">
+          <!-- Toolbar & Summary -->
+          <div class="toolbar-row">
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--navy-dark);">Libro de Calificaciones</h2>
+              <p style="font-size: 0.825rem; color: var(--text-muted); margin-top: 2px;">
+                Sofía Zambrano • Grado 10-A • Promedio Acumulado: <strong id="grades-summary-avg" style="color: var(--primary-blue);">4.4</strong> / 5.0
+              </p>
+            </div>
+            <div class="filters-group">
+              <input type="text" id="filter-grade-search" class="input-search" placeholder="🔍 Buscar evaluación..." />
+              <select id="filter-grade-subject" class="select-filter">
+                <option value="all">Todas las materias</option>
+                <option value="Matemáticas">Matemáticas</option>
+                <option value="Física">Física</option>
+                <option value="Lenguaje">Lenguaje</option>
+                <option value="Química">Química</option>
+                <option value="Ciencias Sociales">Ciencias Sociales</option>
+                <option value="Inglés">Inglés</option>
+              </select>
+              <button id="btn-open-grade-modal" class="btn btn-primary">
+                <span>+ Registrar Calificación</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Grades Data Table -->
+          <div class="data-table-container">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Asignatura</th>
+                  <th>Docente</th>
+                  <th>Evaluación</th>
+                  <th>Fecha</th>
+                  <th>Calificación</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="grades-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: Asistencias -->
+      <div id="view-asistencias" class="app-view">
+        <div class="view-scrollable">
+          <!-- KPIs for Attendance -->
+          <div class="kpi-ribbon" style="padding: 0;">
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <span class="kpi-title">Total Clases Registradas</span>
+                <span class="kpi-value" id="att-kpi-total">24</span>
+              </div>
+              <div class="kpi-icon">📚</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <span class="kpi-title">Asistencias Puntuales</span>
+                <span class="kpi-value" id="att-kpi-present" style="color: var(--success-green);">22</span>
+              </div>
+              <div class="kpi-icon">✅</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <span class="kpi-title">Inasistencias</span>
+                <span class="kpi-value" id="att-kpi-absent" style="color: var(--error-red);">1</span>
+              </div>
+              <div class="kpi-icon">❌</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <span class="kpi-title">Tasa Global</span>
+                <span class="kpi-value" id="att-kpi-rate" style="color: var(--primary-blue);">95.8%</span>
+              </div>
+              <div class="kpi-icon">📊</div>
+            </div>
+          </div>
+
+          <!-- Roll-Call Registration Form (Interactive) -->
+          <div class="card-box">
+            <div class="card-box-header">
+              <h3>📅 Registro Rápido de Asistencia (Llamado a Lista)</h3>
+              <span class="badge-tag info">Orden Causal (HU-005)</span>
+            </div>
+            <form id="form-register-attendance" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 120px; gap: 14px; align-items: flex-end;">
+              <div class="form-field">
+                <label>Fecha de Clase</label>
+                <input type="date" id="att-input-date" class="form-input" required>
+              </div>
+              <div class="form-field">
+                <label>Asignatura</label>
+                <select id="att-input-subject" class="form-select">
+                  <option value="Matemáticas">Matemáticas</option>
+                  <option value="Física">Física</option>
+                  <option value="Lenguaje">Lenguaje</option>
+                  <option value="Química">Química</option>
+                  <option value="Ciencias Sociales">Ciencias Sociales</option>
+                  <option value="Inglés">Inglés</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Estado</label>
+                <select id="att-input-status" class="form-select">
+                  <option value="Presente">✅ Presente</option>
+                  <option value="Ausente">❌ Ausente</option>
+                  <option value="Retardo">⚠️ Retardo</option>
+                  <option value="Justificada">📋 Justificada</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Observaciones</label>
+                <input type="text" id="att-input-obs" class="form-input" placeholder="Ej. A tiempo / excusa...">
+              </div>
+              <button type="submit" class="btn btn-primary" style="height: 42px;">
+                <span>Registrar</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Attendance Table with Filters -->
+          <div class="card-box">
+            <div class="toolbar-row">
+              <h3 style="font-size: 1rem; font-weight: 600;">Historial de Sesiones</h3>
+              <div class="tab-pills" id="att-filter-tabs">
+                <button class="tab-pill active" data-att-filter="all">Todas</button>
+                <button class="tab-pill" data-att-filter="Presente">Presentes</button>
+                <button class="tab-pill" data-att-filter="Ausente">Inasistencias</button>
+                <button class="tab-pill" data-att-filter="Retardo">Retardos</button>
+              </div>
+            </div>
+            <div class="data-table-container">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Asignatura</th>
+                    <th>Evento Causal</th>
+                    <th>Estado</th>
+                    <th>Observaciones</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="att-table-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: Mensajería (Chat en tiempo real) -->
+      <div id="view-mensajeria" class="app-view active" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+        <!-- KPI Ribbon -->
+        <section class="kpi-ribbon">
+          <div class="kpi-card">
+            <div class="kpi-info">
+              <span class="kpi-title">Mensajes en Conversación</span>
+              <span class="kpi-value" id="kpi-total-messages">0</span>
+            </div>
+            <div class="kpi-icon">📬</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-info">
+              <span class="kpi-title">Profesor Asignado</span>
+              <span class="kpi-value" style="font-size: 1.1rem; padding-top: 6px;">Prof. Carlos Mendoza</span>
+            </div>
+            <div class="kpi-icon">👨‍🏫</div>
+          </div>
+        </section>
+
+        <!-- Chat Container (Split View) -->
+        <section class="chat-container">
+          <!-- Conversations List (Left) -->
+          <div class="conversations-panel">
+            <div class="panel-header">
+              <h3>Conversaciones</h3>
+              <span class="conv-count">1 Activa</span>
+            </div>
+            <div class="conversations-list">
+              <div class="conversation-item active">
+                <div class="avatar-teacher">CM</div>
+                <div class="conv-meta">
+                  <div class="conv-title-row">
+                    <strong>Prof. Carlos Mendoza</strong>
+                    <span class="conv-time">En línea</span>
+                  </div>
+                  <p class="conv-subject">Matemáticas — Grado 10-A</p>
+                  <small class="conv-preview" id="conv-preview">Cargando último mensaje...</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Thread Canvas (Right) -->
+          <div class="thread-panel">
+            <div class="thread-header">
+              <div class="thread-user-info">
+                <div class="avatar-teacher">CM</div>
+                <div>
+                  <h4>Prof. Carlos Mendoza</h4>
+                  <p class="thread-subtitle">Docente Titular de Matemáticas — Consulta Académica</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Messages Scroll Area -->
+            <div class="messages-body" id="messages-body">
+              <div class="loading-spinner" id="loading-spinner">
+                Cargando mensajes desde el backend...
+              </div>
+            </div>
+
+            <!-- Send Message Input Bar (Figma Screen 6) -->
+            <div class="message-composer">
+              <!-- Error Banner -->
+              <div class="alert alert-error" id="error-banner" style="display: none;">
+                <span id="error-message">Error</span>
+                <button class="alert-close" id="btn-close-alert">&times;</button>
+              </div>
+
+              <form id="message-form" class="composer-form">
+                <div class="input-wrapper">
+                  <textarea
+                    id="message-content"
+                    placeholder="Escribe un mensaje al docente aquí... (ej. Buenas tardes profesor, quisiera consultar sobre la tarea)"
+                    maxlength="2000"
+                    rows="2"
+                    required
+                  ></textarea>
+                  <div class="char-counter"><span id="char-count">0</span> / 2000</div>
+                </div>
+                <button type="submit" id="btn-send" class="btn btn-primary">
+                  <span>Enviar</span>
+                  <span class="send-icon">➤</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- VIEW: Notificaciones -->
+      <div id="view-notificaciones" class="app-view">
+        <div class="view-scrollable">
+          <div class="toolbar-row">
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--navy-dark);">Centro de Notificaciones y Alertas</h2>
+              <p style="font-size: 0.825rem; color: var(--text-muted); margin-top: 2px;">
+                Tienes <strong id="notif-unread-count" style="color: var(--primary-blue);">2</strong> alertas sin leer
+              </p>
+            </div>
+            <div class="filters-group">
+              <button id="btn-mark-all-read" class="btn btn-secondary">
+                <span>✓ Marcar todas como leídas</span>
+              </button>
+              <button id="btn-simulate-notif" class="btn btn-primary">
+                <span>+ Simular Alerta</span>
+              </button>
+              <button id="btn-clear-read-notif" class="btn btn-secondary" title="Limpiar leídas">
+                <span>🗑️ Limpiar</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter tabs -->
+          <div class="tab-pills" id="notif-filter-tabs">
+            <button class="tab-pill active" data-notif-filter="all">Todas</button>
+            <button class="tab-pill" data-notif-filter="unread">Sin leer</button>
+            <button class="tab-pill" data-notif-filter="academic">Académicas</button>
+            <button class="tab-pill" data-notif-filter="attendance">Asistencias</button>
+            <button class="tab-pill" data-notif-filter="message">Mensajes</button>
+          </div>
+
+          <!-- Notification Items List -->
+          <div class="notif-list" id="notif-list-container">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Registrar Calificación -->
+  <div class="modal-overlay" id="modal-grade">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>📝 Registrar Evaluación Escolar</h3>
+        <button class="btn-close-modal" id="btn-close-grade-modal">&times;</button>
+      </div>
+      <form id="form-add-grade">
+        <div class="modal-content">
+          <div class="form-field">
+            <label>Estudiante</label>
+            <input type="text" class="form-input" value="Sofía Zambrano (ID: 1076500061) — Grado 10-A" readonly style="background: #f8fafc;">
+          </div>
+          <div class="form-field">
+            <label>Asignatura</label>
+            <select id="modal-grade-subject" class="form-select" required>
+              <option value="Matemáticas">Matemáticas</option>
+              <option value="Física">Física</option>
+              <option value="Lenguaje">Lenguaje</option>
+              <option value="Química">Química</option>
+              <option value="Ciencias Sociales">Ciencias Sociales</option>
+              <option value="Inglés">Inglés</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Nombre de la Evaluación / Actividad</label>
+            <input type="text" id="modal-grade-title" class="form-input" placeholder="Ej. Taller de Funciones Reales" required>
+          </div>
+          <div class="form-field">
+            <label>Docente Evaluador</label>
+            <input type="text" id="modal-grade-teacher" class="form-input" value="Prof. Carlos Mendoza" required>
+          </div>
+          <div class="form-field">
+            <label>Calificación (Rango: 1.0 a 5.0)</label>
+            <input type="number" id="modal-grade-score" class="form-input" min="1.0" max="5.0" step="0.1" value="4.5" required>
+          </div>
+          <div class="form-field">
+            <label>Observaciones del Docente</label>
+            <textarea id="modal-grade-obs" class="form-textarea" rows="2" placeholder="Comentarios sobre el desempeño..."></textarea>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-grade-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar y Emitir Evento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>

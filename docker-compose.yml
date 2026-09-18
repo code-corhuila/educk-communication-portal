@@ -1,0 +1,18 @@
+services:
+  # Pattern: <abbr>-<domain>-<piece> -> educk-comm-portal
+  frontend-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: educk-comm-portal:latest
+    container_name: educk-comm-portal
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:8085/api/v1
+    networks:
+      - edutrack-net
+
+networks:
+  edutrack-net:
+    driver: bridge
