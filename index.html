@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduTrack — Portal de Comunicación (HU-004)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">💬</div>
+        <div class="brand-text">
+          <h2>EduTrack</h2>
+          <span>Portal Comunicación</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-view="mensajeria">
+          <span class="nav-icon">💬</span>
+          <span>Mensajería Directa</span>
+          <span class="badge-pulse">HU-004</span>
+        </a>
+        <a href="#" class="nav-item" data-view="canales">
+          <span class="nav-icon">📢</span>
+          <span>Canales y Circulares</span>
+        </a>
+        <a href="#" class="nav-item" data-view="lecturas">
+          <span class="nav-icon">👁️</span>
+          <span>Confirmación Lecturas</span>
+        </a>
+        <a href="#" class="nav-item" data-view="contactos">
+          <span class="nav-icon">👥</span>
+          <span>Directorio Institucional</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="backend-status" id="backend-status">
+          <span class="status-dot online"></span>
+          <span class="status-label">Backend: <strong id="backend-label">Conectado (8085)</strong></span>
+        </div>
+        <div class="user-chip">
+          <div class="avatar">XZ</div>
+          <div class="user-meta">
+            <strong>Ximena Zambrano</strong>
+            <small>Tutor / Acudiente</small>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Navbar -->
+      <header class="topbar">
+        <div class="breadcrumb" id="top-breadcrumb">
+          <span>EduTrack</span> &gt; <span id="bc-module">Comunicación</span> &gt; <strong class="current" id="bc-view">Chat Padre-Profesor (HU-004)</strong>
+        </div>
+        <div class="topbar-actions" id="topbar-actions">
+          <button id="btn-refresh" class="btn btn-secondary" title="Actualizar conversación">
+            🔄 Recargar
+          </button>
+        </div>
+      </header>
+
+      <!-- VIEW: Mensajería Directa (HU-004) -->
+      <div id="view-mensajeria" class="app-view active" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+        <!-- KPI Ribbon -->
+        <section class="kpi-ribbon">
+          <div class="kpi-card">
+            <div class="kpi-info">
+              <span class="kpi-title">Mensajes en Conversación</span>
+              <span class="kpi-value" id="kpi-total-messages">0</span>
+            </div>
+            <div class="kpi-icon">📬</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-info">
+              <span class="kpi-title">Profesor Activo</span>
+              <span class="kpi-value" style="font-size: 1.1rem; padding-top: 6px;">Prof. Carlos Mendoza</span>
+            </div>
+            <div class="kpi-icon">👨‍🏫</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-info">
+              <span class="kpi-title">Gobernanza de Mensajería</span>
+              <span class="kpi-value" style="font-size: 1.0rem; color: var(--success-green); padding-top: 6px;">Idempotencia Activa</span>
+            </div>
+            <div class="kpi-icon">🔒</div>
+          </div>
+        </section>
+
+        <!-- Chat Container (Split View) -->
+        <section class="chat-container">
+          <!-- Conversations List (Left) -->
+          <div class="conversations-panel">
+            <div class="panel-header">
+              <h3>Conversaciones</h3>
+              <span class="conv-count">1 Activa</span>
+            </div>
+            <div class="conversations-list">
+              <div class="conversation-item active">
+                <div class="avatar-teacher">CM</div>
+                <div class="conv-meta">
+                  <div class="conv-title-row">
+                    <strong>Prof. Carlos Mendoza</strong>
+                    <span class="conv-time">En línea</span>
+                  </div>
+                  <p class="conv-subject">Matemáticas — Grado 10-A</p>
+                  <small class="conv-preview" id="conv-preview">Cargando último mensaje...</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Thread Canvas (Right) -->
+          <div class="thread-panel">
+            <div class="thread-header">
+              <div class="thread-user-info">
+                <div class="avatar-teacher">CM</div>
+                <div>
+                  <h4>Prof. Carlos Mendoza</h4>
+                  <p class="thread-subtitle">Docente Titular de Matemáticas — Consulta Académica</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Messages Scroll Area -->
+            <div class="messages-body" id="messages-body">
+              <div class="loading-spinner" id="loading-spinner">
+                Cargando mensajes desde el backend (:8085)...
+              </div>
+            </div>
+
+            <!-- Send Message Input Bar -->
+            <div class="message-composer">
+              <!-- Error Banner -->
+              <div class="alert alert-error" id="error-banner" style="display: none;">
+                <span id="error-message">Error</span>
+                <button class="alert-close" id="btn-close-alert">&times;</button>
+              </div>
+
+              <form id="message-form" class="composer-form">
+                <div class="input-wrapper">
+                  <textarea
+                    id="message-content"
+                    placeholder="Escribe un mensaje al docente aquí... (ej. Buenas tardes profesor, quisiera consultar sobre la tarea)"
+                    maxlength="500"
+                    rows="2"
+                    required
+                  ></textarea>
+                  <div class="char-counter"><span id="char-count">0</span> / 500</div>
+                </div>
+                <button type="submit" id="btn-send" class="btn btn-primary">
+                  <span>Enviar</span>
+                  <span class="send-icon">➤</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- VIEW: Canales y Circulares Institucionales -->
+      <div id="view-canales" class="app-view">
+        <div class="view-scrollable">
+          <div class="toolbar-row">
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--navy-dark);">Canales y Circulares Institucionales</h2>
+              <p style="font-size: 0.825rem; color: var(--text-muted); margin-top: 2px;">
+                Comunicados oficiales emitidos por Rectoría, Coordinación y Docentes
+              </p>
+            </div>
+          </div>
+          <div id="announcements-container" style="margin-top: 16px;">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: Confirmaciones de Lectura (message_reads) -->
+      <div id="view-lecturas" class="app-view">
+        <div class="view-scrollable">
+          <div class="toolbar-row">
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--navy-dark);">Confirmaciones de Lectura y Entrega</h2>
+              <p style="font-size: 0.825rem; color: var(--text-muted); margin-top: 2px;">
+                Registro de confirmaciones auditables respaldado en la tabla <code>message_reads</code> (ADR-003)
+              </p>
+            </div>
+          </div>
+          <div class="data-table-container" style="margin-top: 16px;">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>ID Mensaje</th>
+                  <th>Destinatario</th>
+                  <th>Fecha de Envío</th>
+                  <th>Estado</th>
+                  <th>Fecha de Lectura</th>
+                  <th>Canal</th>
+                </tr>
+              </thead>
+              <tbody id="reads-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: Directorio de Contactos -->
+      <div id="view-contactos" class="app-view">
+        <div class="view-scrollable">
+          <div class="toolbar-row">
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--navy-dark);">Directorio Institucional de Contactos</h2>
+              <p style="font-size: 0.825rem; color: var(--text-muted); margin-top: 2px;">
+                Docentes y personal directivo asignados al acudiente
+              </p>
+            </div>
+          </div>
+          <div id="contacts-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-top: 16px;">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>
