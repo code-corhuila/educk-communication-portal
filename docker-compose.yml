@@ -1,11 +1,11 @@
 services:
-  # Pattern: <abbr>-<domain>-<piece> -> educk-comm-portal
+  # Pattern: <abbr>-<domain>-<piece> -> educk-communication-portal
   frontend-service:
     build:
       context: .
       dockerfile: Dockerfile
-    image: educk-comm-portal:latest
-    container_name: educk-comm-portal
+    image: educk-communication-portal:latest
+    container_name: educk-communication-portal
     ports:
       - "3000:80"
     environment:

@@ -4,11 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefin
 export async function checkBackendHealth() {
   try {
     const res = await fetch(`${API_BASE_URL}/messages/health`);
-    if (res.ok) return true;
-    // Fallback
-    const dummyUser = '00000000-0000-0000-0000-000000000000';
-    const fallbackRes = await fetch(`${API_BASE_URL}/messages/conversation?user1=${dummyUser}&user2=${dummyUser}`);
-    return fallbackRes.ok || fallbackRes.status === 200;
+    return res.ok;
   } catch (err) {
     return false;
   }
@@ -23,12 +19,17 @@ export async function fetchConversation(user1, user2) {
   return await response.json();
 }
 
-export async function sendMessageApi({ senderId, receiverId, content, subjectId }) {
+export async function sendMessageApi({ senderId, receiverId, content, subjectId, idempotencyKey = (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : null) }) {
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  if (idempotencyKey) {
+    headers['Idempotency-Key'] = idempotencyKey;
+  }
+
   const response = await fetch(`${API_BASE_URL}/messages`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers,
     body: JSON.stringify({
       senderId,
       receiverId,
