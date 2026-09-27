@@ -9,9 +9,9 @@ Governance and documentation live in [`educk-docs`](https://github.com/code-corh
 
 ## 1. UI & Tech Stack
 
-- **Framework:** React 18 + Vite
+- **Framework:** Vanilla JavaScript (ES modules) + Vite
 - **Design System:** Implements Figma tokens (Deep Navy `#0f172a`, Royal Blue `#3b82f6`, Inter font)
-- **Local Port:** `3000`
+- **Local Port:** `3005`
 - **Backend API target:** `http://localhost:8085/api/v1`
 
 ## 2. Branching & Governance

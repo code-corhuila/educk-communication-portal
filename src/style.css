@@ -868,6 +868,41 @@ body {
 }
 
 /* Modals */
+.announcement-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-top: 18px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.announcement-filters label {
+  display: grid;
+  gap: 6px;
+  color: var(--navy-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.announcement-card {
+  margin-bottom: 16px;
+  border-left: 4px solid var(--primary-blue);
+}
+
+.announcement-card.is-read { opacity: 0.82; }
+.announcement-title { margin-top: 8px; font-size: 1.05rem; }
+.announcement-preview { margin-top: 8px; color: var(--text-main); font-size: 0.9rem; line-height: 1.5; }
+.announcement-footer { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-color); }
+.announcement-footer .btn { min-height: 36px; padding: 0 12px; font-size: 0.8rem; }
+.badge-tag.unread { color: #7c2d12; background: #ffedd5; }
+.announcement-empty { padding: 40px; text-align: center; color: var(--text-muted); background: #fff; border: 1px solid var(--border-color); border-radius: var(--radius-lg); }
+.announcement-modal-meta { color: var(--text-muted); font-size: 0.85rem; }
+.announcement-modal-card .modal-content p:last-child { color: var(--text-main); line-height: 1.65; }
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -964,6 +999,19 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .announcement-filters { grid-template-columns: 1fr 1fr; }
+  .announcement-filters .btn { grid-column: 1 / -1; }
+}
+
+@media (max-width: 480px) {
+  .announcement-filters { grid-template-columns: 1fr; }
+  .announcement-filters .btn { grid-column: auto; }
+  .announcement-footer { align-items: stretch; flex-direction: column; }
+  .announcement-footer .btn { width: 100%; }
+  .modal-overlay { padding: 12px; }
 }
 
 /* Notifications List */

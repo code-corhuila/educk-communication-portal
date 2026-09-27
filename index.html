@@ -179,8 +179,37 @@
               </p>
             </div>
           </div>
+          <div class="announcement-filters" aria-label="Filtros de comunicados">
+            <label for="announcement-category">
+              Categoría
+              <select id="announcement-category" class="form-select" aria-label="Filtrar comunicados por categoría">
+                <option value="ALL">Todas</option>
+                <option value="URGENT">Urgente</option>
+                <option value="GENERAL">General</option>
+                <option value="ACADEMIC">Académico</option>
+              </select>
+            </label>
+            <label for="announcement-date">
+              Fecha
+              <input id="announcement-date" class="form-input" type="date" aria-label="Filtrar comunicados por fecha">
+            </label>
+            <button id="btn-clear-announcement-filters" class="btn btn-secondary" type="button">Limpiar filtros</button>
+          </div>
           <div id="announcements-container" style="margin-top: 16px;">
             <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <div id="announcement-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="announcement-modal-title">
+        <div class="modal-card announcement-modal-card">
+          <div class="modal-head">
+            <h3 id="announcement-modal-title"></h3>
+            <button id="btn-close-announcement" class="btn-close-modal" type="button" aria-label="Cerrar comunicado">×</button>
+          </div>
+          <div class="modal-content">
+            <p id="announcement-modal-meta" class="announcement-modal-meta"></p>
+            <p id="announcement-modal-content"></p>
           </div>
         </div>
       </div>
