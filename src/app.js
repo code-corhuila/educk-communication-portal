@@ -531,7 +531,7 @@ async function updateBackendStatus() {
 // ============================================================
 // INITIALIZATION
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+export function mount() {
   setupNavigation();
   updateBackendStatus();
   loadConversation();
@@ -584,4 +584,11 @@ document.addEventListener('DOMContentLoaded', () => {
       loadConversation();
     }
   }, 10000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // If not running as a microfrontend, mount immediately
+  if (!window.__MICRO_APP__) {
+    mount();
+  }
 });
