@@ -592,3 +592,4 @@ document.addEventListener('DOMContentLoaded', () => {
     mount();
   }
 });
+// Feature: Envío de Mensajes Directos con Bloqueo de Botón
