@@ -1,4 +1,5 @@
 import { checkBackendHealth, fetchConversation, sendMessageApi } from './api.js';
+import { ANNOUNCEMENT_CATEGORIES, filterAnnouncements, markAnnouncementRead, normalizeAnnouncements } from './announcements.js';
 
 // ============================================================
 // CONSTANTS & INITIAL DATA (Strictly Communication Domain)
@@ -14,9 +15,9 @@ const INITIAL_CONTACTS = [
 ];
 
 const INITIAL_ANNOUNCEMENTS = [
-  { id: 'anc-1', title: 'Circular Informativa: Entrega de Informes Primer Corte', author: 'Rectoría Institucional', date: '2026-09-18', tag: 'Oficial', content: 'Estimados padres de familia y acudientes: El próximo viernes 25 de septiembre se realizará la jornada virtual de entrega de reportes del primer corte académico.', priority: 'high' },
-  { id: 'anc-2', title: 'Convocatoria Comité de Convivencia Escolar', author: 'Coordinación de Convivencia', date: '2026-09-15', tag: 'Convivencia', content: 'Invitación a los representantes de curso para la sesión ordinaria mensual el miércoles a las 04:00 PM.', priority: 'normal' },
-  { id: 'anc-3', title: 'Jornada Cultural y Científica 2026', author: 'Comité de Eventos', date: '2026-09-10', tag: 'Eventos', content: 'Inscripciones abiertas para la muestra de proyectos de ciencia y robótica de estudiantes de bachillerato.', priority: 'normal' }
+  { id: 'anc-1', title: 'Entrega de Informes del Primer Corte', author: 'Rectoría Institucional', date: '2026-09-18', category: 'URGENT', content: 'Estimados padres de familia y acudientes: El próximo viernes 25 de septiembre se realizará la jornada virtual de entrega de reportes del primer corte académico.', isRead: false },
+  { id: 'anc-2', title: 'Convocatoria al Comité de Convivencia', author: 'Coordinación de Convivencia', date: '2026-09-15', category: 'GENERAL', content: 'Invitación a los representantes de curso para la sesión ordinaria mensual el miércoles a las 04:00 PM.', isRead: false },
+  { id: 'anc-3', title: 'Jornada Cultural y Científica 2026', author: 'Comité Académico', date: '2026-09-10', category: 'ACADEMIC', content: 'Inscripciones abiertas para la muestra de proyectos de ciencia y robótica de estudiantes de bachillerato.', isRead: true }
 ];
 
 const INITIAL_READ_RECEIPTS = [
@@ -35,7 +36,9 @@ const INITIAL_COMMUNICATION_NOTES = [
 // ============================================================
 let currentView = 'mensajeria';
 let contactsList = loadFromStorage('edutrack_contacts', INITIAL_CONTACTS);
-let announcementsList = loadFromStorage('edutrack_announcements', INITIAL_ANNOUNCEMENTS);
+let announcementsList = normalizeAnnouncements(loadFromStorage('edutrack_announcements', INITIAL_ANNOUNCEMENTS));
+let announcementFilters = { category: 'ALL', date: '' };
+let announcementTriggerId = null;
 let readReceiptsList = loadFromStorage('edutrack_read_receipts', INITIAL_READ_RECEIPTS);
 let commNotes = loadFromStorage('edutrack_comm_notes', INITIAL_COMMUNICATION_NOTES);
 let activeContactId = TEACHER_USER_ID;
@@ -198,42 +201,95 @@ function renderAnnouncements() {
   const container = document.getElementById('announcements-container');
   if (!container) return;
 
-  if (announcementsList.length === 0) {
+  const filteredAnnouncements = filterAnnouncements(announcementsList, announcementFilters);
+
+  if (filteredAnnouncements.length === 0) {
     container.innerHTML = `
-      <div style="text-align: center; color: var(--text-muted); padding: 40px; background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
-        📢 No hay circulares ni comunicados publicados actualmente.
+      <div class="announcement-empty" role="status">
+        📢 No hay comunicados que coincidan con los filtros seleccionados.
       </div>
     `;
     return;
   }
 
-  container.innerHTML = announcementsList.map(a => `
-    <div class="card-box" style="margin-bottom: 16px; border-left: 4px solid ${a.priority === 'high' ? 'var(--error-red)' : 'var(--primary-blue)'};">
+  container.innerHTML = filteredAnnouncements.map(a => `
+    <article class="card-box announcement-card ${a.isRead ? 'is-read' : ''}">
       <div class="card-box-header">
         <div>
-          <span class="badge-tag ${a.priority === 'high' ? 'danger' : 'info'}">${escapeHtml(a.tag)}</span>
-          <h3 style="margin-top: 6px; font-size: 1.05rem;">${escapeHtml(a.title)}</h3>
+          <span class="badge-tag ${a.category === 'URGENT' ? 'danger' : 'info'}">${escapeHtml(ANNOUNCEMENT_CATEGORIES[a.category] || ANNOUNCEMENT_CATEGORIES.GENERAL)}</span>
+          <span class="badge-tag ${a.isRead ? 'pass' : 'unread'}">${a.isRead ? 'Leído' : 'Sin leer'}</span>
+          <h3 class="announcement-title">${escapeHtml(a.title)}</h3>
         </div>
         <small style="color: var(--text-muted);">${escapeHtml(a.date)}</small>
       </div>
-      <p style="font-size: 0.9rem; color: var(--text-main); margin-top: 8px; line-height: 1.5;">
-        ${escapeHtml(a.content)}
-      </p>
-      <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 8px;">
+      <p class="announcement-preview">${escapeHtml(a.content)}</p>
+      <div class="announcement-footer">
         <small style="color: var(--text-muted);">Publicado por: <strong>${escapeHtml(a.author)}</strong></small>
-        <button class="btn btn-secondary btn-confirm-read" data-anc-id="${a.id}" style="height: 32px; padding: 0 12px; font-size: 0.8rem;">
-          ✓ Confirmar Enterado
+        <button class="btn btn-secondary btn-open-announcement" data-announcement-id="${a.id}" aria-label="Leer comunicado: ${escapeHtml(a.title)}">
+          Leer comunicado
         </button>
       </div>
-    </div>
+    </article>
   `).join('');
 
-  container.querySelectorAll('.btn-confirm-read').forEach(btn => {
-    btn.addEventListener('click', () => {
-      btn.textContent = '✓ Enterado';
-      btn.disabled = true;
-      showToast('Confirmación de lectura registrada en el sistema', '✅');
+  container.querySelectorAll('.btn-open-announcement').forEach(button => {
+    button.addEventListener('click', () => {
+      announcementTriggerId = button.dataset.announcementId;
+      openAnnouncement(button.dataset.announcementId);
     });
+  });
+}
+
+function openAnnouncement(announcementId) {
+  const announcement = announcementsList.find(({ id }) => id === announcementId);
+  const modal = document.getElementById('announcement-modal');
+  if (!announcement || !modal) return;
+
+  announcementsList = markAnnouncementRead(announcementsList, announcementId);
+  saveToStorage('edutrack_announcements', announcementsList);
+  document.getElementById('announcement-modal-title').textContent = announcement.title;
+  document.getElementById('announcement-modal-meta').textContent = `${announcement.author} · ${announcement.date}`;
+  document.getElementById('announcement-modal-content').textContent = announcement.content;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.getElementById('btn-close-announcement').focus();
+  renderAnnouncements();
+}
+
+function closeAnnouncement() {
+  const modal = document.getElementById('announcement-modal');
+  if (!modal?.classList.contains('open')) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.querySelector(`[data-announcement-id="${announcementTriggerId}"]`)?.focus();
+}
+
+function setupAnnouncementControls() {
+  const categoryFilter = document.getElementById('announcement-category');
+  const dateFilter = document.getElementById('announcement-date');
+  const clearButton = document.getElementById('btn-clear-announcement-filters');
+  const modal = document.getElementById('announcement-modal');
+
+  categoryFilter?.addEventListener('change', () => {
+    announcementFilters.category = categoryFilter.value;
+    renderAnnouncements();
+  });
+  dateFilter?.addEventListener('change', () => {
+    announcementFilters.date = dateFilter.value;
+    renderAnnouncements();
+  });
+  clearButton?.addEventListener('click', () => {
+    announcementFilters = { category: 'ALL', date: '' };
+    categoryFilter.value = 'ALL';
+    dateFilter.value = '';
+    renderAnnouncements();
+  });
+  document.getElementById('btn-close-announcement')?.addEventListener('click', closeAnnouncement);
+  modal?.addEventListener('click', (event) => {
+    if (event.target === modal) closeAnnouncement();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeAnnouncement();
   });
 }
 
@@ -533,6 +589,7 @@ async function updateBackendStatus() {
 // ============================================================
 export function mount() {
   setupNavigation();
+  setupAnnouncementControls();
   updateBackendStatus();
   loadConversation();
   renderCommNotes();
