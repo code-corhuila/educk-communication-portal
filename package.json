@@ -8,8 +8,8 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "dependencies": {},
   "devDependencies": {
+    "@originjs/vite-plugin-federation": "^1.4.1",
     "vite": "^5.4.2"
   }
 }
