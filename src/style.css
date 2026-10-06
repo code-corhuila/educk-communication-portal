@@ -1184,3 +1184,34 @@ body {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+/* Keep navigation and content reachable on narrow and zoomed viewports. */
+.main-content, .thread-panel, .thread-user-info { min-width: 0; }
+.modal-card { max-height: calc(100dvh - 40px); overflow-y: auto; }
+.modal-content { overflow-wrap: anywhere; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--primary-blue); outline-offset: 3px; }
+@media (max-width: 1024px) {
+  body { height: auto; overflow: auto; }
+  .app-layout { width: 100%; height: auto; min-height: 100dvh; flex-direction: column; }
+  .sidebar { width: 100%; }
+  .brand { padding: 16px; }
+  .nav-menu { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; }
+  .nav-item { flex: 1 1 220px; margin: 0; }
+  .sidebar-footer { display: none; }
+  .main-content, .app-view { overflow: visible; }
+  .topbar { flex-wrap: wrap; gap: 12px; padding: 16px; }
+  .kpi-ribbon { padding: 16px; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
+  .chat-container { grid-template-columns: 1fr; margin: 0 16px 16px; }
+  .conversations-panel { max-height: 220px; border-right: 0; border-bottom: 1px solid var(--border-color); }
+  .thread-panel { min-height: 420px; }
+  .view-scrollable { padding: 16px; overflow: visible; }
+  .kpi-value, .thread-user-info { overflow-wrap: anywhere; }
+}
+@media (max-width: 480px) {
+  .nav-item { flex-basis: 100%; }
+  .thread-header, .messages-body { padding: 12px; }
+  .thread-header { flex-wrap: wrap; gap: 12px; }
+  .modal-card { max-height: calc(100dvh - 24px); }
+  #toast-container { right: 12px; left: 12px; bottom: 12px; }
+  .toast-msg { overflow-wrap: anywhere; }
+}
