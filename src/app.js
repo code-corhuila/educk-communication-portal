@@ -289,7 +289,18 @@ function setupAnnouncementControls() {
     if (event.target === modal) closeAnnouncement();
   });
   document.addEventListener('keydown', (event) => {
+    if (!modal?.classList.contains('open')) return;
     if (event.key === 'Escape') closeAnnouncement();
+    if (event.key === 'Tab') {
+      const controls = [...modal.querySelectorAll('button, a[href], input, select, textarea, [tabindex="0"]')]
+        .filter((element) => !element.disabled && element.getClientRects().length);
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (first && (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      }
+    }
   });
 }
 
