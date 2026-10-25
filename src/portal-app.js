@@ -269,7 +269,17 @@ async function updateBackendStatus() {
 }
 export function mount() {
   if (typeof window !== 'undefined' && (window.self !== window.top || window.location.search.includes('embedded=1'))) document.body?.classList?.add('is-embedded');
-  if (typeof window !== 'undefined' && window.self !== window.top) document.body.classList.add('is-embedded-iframe');
+  const urlRole = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('role')?.toUpperCase() : '';
+  if (urlRole === 'DOCENTE') {
+    const guardianNames = ['Sra. María López (Acudiente de Juan S.)', 'Sr. Roberto Gómez (Acudiente de Ana G.)', 'Sra. Elena Torres (Acudiente de Sofía T.)', 'Mag. Juan Pérez (Coordinación)'];
+    const guardianRoles = ['Madre de Juan Sebastián · 10°A', 'Padre de Ana Sofía · 10°A', 'Madre de Sofía Valentina · 10°A', 'Coordinador Académico · 10°A'];
+    const guardianAvatars = ['ML', 'RG', 'ET', 'JP'];
+    contactsList = contactsList.map((c, idx) => ({ ...c, name: guardianNames[idx] || c.name, role: guardianRoles[idx] || c.role, avatar: guardianAvatars[idx] || c.avatar, office: 'Atención Familiar · 10°A' }));
+    const subEl = document.getElementById('conv-student-context'), badgeEl = document.getElementById('conv-count-badge'), inputEl = document.getElementById('message-content');
+    if (subEl) subEl.textContent = 'Familias y Acudientes · Grado 10°A';
+    if (badgeEl) badgeEl.textContent = '4 Familias';
+    if (inputEl) inputEl.placeholder = 'Escriba su mensaje o citación para el acudiente...';
+  }
   document.querySelectorAll('.nav-menu .nav-item').forEach((item) => item.addEventListener('click', (e) => { e.preventDefault(); const v = item.getAttribute('data-view'); if (v) switchView(v); }));
   document.getElementById('btn-refresh')?.addEventListener('click', () => { updateBackendStatus(); loadConversation(); renderAnnouncements(); renderReadReceiptsView(readReceiptsList, readsSearchQuery); showToast('Bandeja institucional sincronizada', 'success'); });
   const studentSelector = document.getElementById('student-selector');
