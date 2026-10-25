@@ -333,6 +333,7 @@ export function mount() {
   document.getElementById('btn-close-telemetry')?.addEventListener('click', () => closeModalDialog(telemetryModal));
   document.getElementById('btn-close-telemetry-foot')?.addEventListener('click', () => closeModalDialog(telemetryModal));
   updateSidebarBadges(); renderConversationsList(); renderActiveThreadHeader(); loadConversation(); renderCommNotes(); updateBackendStatus();
+  const initView = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('view') : null; if (initView) switchView(initView);
   const readsSearchInput = document.getElementById('reads-search-input');
   readsSearchInput?.addEventListener('input', () => { readsSearchQuery = readsSearchInput.value; renderReadReceiptsView(readReceiptsList, readsSearchQuery); });
   const formAddNote = document.getElementById('form-add-comm-note');
