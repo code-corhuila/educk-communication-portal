@@ -4,22 +4,15 @@ import { markAnnouncementRead, normalizeAnnouncements } from './announcements.js
 import { CURRENT_USER_ID, INITIAL_ANNOUNCEMENTS, INITIAL_COMMUNICATION_NOTES, INITIAL_CONTACTS, INITIAL_CONVERSATION_THREADS, INITIAL_READ_RECEIPTS, STUDENTS_DIRECTORY, TEACHER_USER_ID } from './threads-data.js';
 import { attachDialogLightDismissFallback, closeModalDialog, escapeHtml, openModalDialog, renderAnnouncementsView, renderCommNotesView, renderContactsView, renderReadReceiptsView, showToast, updateTelemetryModalView } from './views.js';
 const DEFAULT_STUDENT_ID = 's-4402-juan-chala';
-let currentView = 'mensajeria';
-let currentStudentId = DEFAULT_STUDENT_ID;
+let currentView = 'mensajeria', currentStudentId = DEFAULT_STUDENT_ID, activeContactId = TEACHER_USER_ID;
 let contactsList = loadFromStorage('edutrack_contacts_v3', INITIAL_CONTACTS);
 let conversationThreads = loadFromStorage('edutrack_threads_v3', INITIAL_CONVERSATION_THREADS);
 let pendingOutbox = loadFromStorage('edutrack_outbox_v3', {});
 let announcementsList = normalizeAnnouncements(loadFromStorage('edutrack_announcements_v3', INITIAL_ANNOUNCEMENTS));
-let announcementFilters = { category: 'ALL', date: '' };
-let announcementTriggerId = null;
+let announcementFilters = { category: 'ALL', date: '' }, announcementTriggerId = null;
 let readReceiptsList = loadFromStorage('edutrack_read_receipts_v3', INITIAL_READ_RECEIPTS);
 let commNotes = loadFromStorage('edutrack_comm_notes_v3', INITIAL_COMMUNICATION_NOTES);
-let activeContactId = TEACHER_USER_ID;
-let convFilterTab = 'ALL';
-let convSearchQuery = '';
-let readsSearchQuery = '';
-let isSending = false;
-let isBackendOnline = false;
+let convFilterTab = 'ALL', convSearchQuery = '', readsSearchQuery = '', isSending = false, isBackendOnline = false;
 const telemetryLogs = [{
   timestamp: new Date().toISOString(), level: 'INFO', service: 'educk-communication-portal', version: '2.0.0', environment: 'qa',
   trace_id: '4bf92f3577b34da6a3ce929d0e0e4736', span_id: '00f067aa0ba902b7', correlation_id: 'corr-msg-99120',
@@ -36,16 +29,14 @@ const saveToStorage = (key, value) => { try { localStorage.setItem(key, JSON.str
 const getThreadKey = (studentId = currentStudentId, contactId = activeContactId) => studentId === DEFAULT_STUDENT_ID ? contactId : `${studentId}:${contactId}`;
 function getThreadMessages(studentId = currentStudentId, contactId = activeContactId) {
   const key = getThreadKey(studentId, contactId);
-  const base = conversationThreads[key] || [];
-  const queued = pendingOutbox[key] || [];
+  const base = conversationThreads[key] || [], queued = pendingOutbox[key] || [];
   const existingKeys = new Set(base.map((m) => m.idempotencyKey || m.id));
   return [...base, ...queued.filter((q) => !existingKeys.has(q.idempotencyKey || q.id))];
 }
 function getStudentContacts(studentId = currentStudentId) {
   const st = STUDENTS_DIRECTORY[studentId] || STUDENTS_DIRECTORY[DEFAULT_STUDENT_ID];
   return contactsList.map((c) => {
-    const thread = getThreadMessages(studentId, c.id);
-    const lastEntry = thread.length > 0 ? thread[thread.length - 1] : null;
+    const thread = getThreadMessages(studentId, c.id), lastEntry = thread.length > 0 ? thread[thread.length - 1] : null;
     return {
       ...c, grade: st.grade, unread: studentId === DEFAULT_STUDENT_ID ? (c.unread || 0) : 0,
       lastMsg: lastEntry ? lastEntry.content : (studentId === DEFAULT_STUDENT_ID ? c.lastMsg : `Canal académico habilitado para ${st.name} (${st.grade}).`)
@@ -76,10 +67,8 @@ const viewMeta = {
 function updateSidebarBadges() {
   const unreadMessagesCount = getStudentContacts().reduce((acc, c) => acc + (c.unread || 0), 0);
   const unreadAnnouncementsCount = announcementsList.filter((a) => !a.isRead).length;
-  const navMsgBadge = document.getElementById('nav-unread-messages');
-  const navAncBadge = document.getElementById('nav-unread-announcements');
-  const statTotalAnc = document.getElementById('stat-total-announcements');
-  const statUnreadAnc = document.getElementById('stat-unread-announcements');
+  const navMsgBadge = document.getElementById('nav-unread-messages'), navAncBadge = document.getElementById('nav-unread-announcements');
+  const statTotalAnc = document.getElementById('stat-total-announcements'), statUnreadAnc = document.getElementById('stat-unread-announcements');
   if (navMsgBadge) { navMsgBadge.textContent = unreadMessagesCount > 0 ? String(unreadMessagesCount) : 'Al día'; navMsgBadge.className = unreadMessagesCount > 0 ? 'badge-pulse' : 'nav-count-badge subtle'; }
   if (navAncBadge) { navAncBadge.textContent = String(unreadAnnouncementsCount); navAncBadge.style.display = unreadAnnouncementsCount > 0 ? 'inline-flex' : 'none'; }
   if (statTotalAnc) statTotalAnc.textContent = String(announcementsList.length);
@@ -90,9 +79,7 @@ function switchView(viewName) {
   currentView = viewName;
   document.querySelectorAll('.nav-menu .nav-item').forEach((item) => item.classList.toggle('active', item.getAttribute('data-view') === viewName));
   document.querySelectorAll('.app-view').forEach((viewEl) => viewEl.classList.toggle('active', viewEl.id === `view-${viewName}`));
-  const meta = viewMeta[viewName];
-  const bcModule = document.getElementById('bc-module');
-  const bcView = document.getElementById('bc-view');
+  const meta = viewMeta[viewName], bcModule = document.getElementById('bc-module'), bcView = document.getElementById('bc-view');
   if (bcModule) bcModule.textContent = meta.module;
   if (bcView) bcView.textContent = meta.view;
   if (viewName === 'mensajeria') { renderConversationsList(); renderActiveThreadHeader(); loadConversation(); }
@@ -101,8 +88,7 @@ function switchView(viewName) {
   if (viewName === 'contactos') renderContactsView(getStudentContacts(), (cid) => { activeContactId = cid; switchView('mensajeria'); });
 }
 function renderConversationsList() {
-  const listEl = document.getElementById('conversations-list');
-  const countBadge = document.getElementById('conv-count-badge');
+  const listEl = document.getElementById('conversations-list'), countBadge = document.getElementById('conv-count-badge');
   if (!listEl) return;
   const filtered = getStudentContacts().filter((c) => {
     const matchesTab = convFilterTab === 'ALL' || (convFilterTab === 'UNREAD' && c.unread > 0) || c.category === convFilterTab;
@@ -133,12 +119,9 @@ function renderConversationsList() {
 function renderActiveThreadHeader() {
   const teacher = getActiveContact();
   if (!teacher) return;
-  const avatarEl = document.getElementById('thread-teacher-avatar');
-  const nameEl = document.getElementById('thread-teacher-name');
-  const statusEl = document.getElementById('thread-teacher-status');
-  const subtitleEl = document.getElementById('thread-teacher-subtitle');
-  const kpiTeacherEl = document.getElementById('kpi-active-teacher');
-  const kpiScheduleEl = document.getElementById('kpi-teacher-schedule');
+  const avatarEl = document.getElementById('thread-teacher-avatar'), nameEl = document.getElementById('thread-teacher-name');
+  const statusEl = document.getElementById('thread-teacher-status'), subtitleEl = document.getElementById('thread-teacher-subtitle');
+  const kpiTeacherEl = document.getElementById('kpi-active-teacher'), kpiScheduleEl = document.getElementById('kpi-teacher-schedule');
   if (avatarEl) { avatarEl.textContent = teacher.avatar; avatarEl.className = `avatar-teacher theme-${teacher.avatarTheme || 'blue'}`; }
   if (nameEl) nameEl.textContent = teacher.name;
   if (statusEl) { statusEl.textContent = teacher.statusLabel || 'Disponible'; statusEl.className = `teacher-presence-badge ${teacher.status}`; }
@@ -150,8 +133,7 @@ function renderAnnouncements() {
   updateSidebarBadges();
   renderAnnouncementsView(announcementsList, announcementFilters, (announcementId) => {
     announcementTriggerId = announcementId;
-    const announcement = announcementsList.find(({ id }) => id === announcementId);
-    const modal = document.getElementById('announcement-modal');
+    const announcement = announcementsList.find(({ id }) => id === announcementId), modal = document.getElementById('announcement-modal');
     if (!announcement || !modal) return;
     announcementsList = markAnnouncementRead(announcementsList, announcementId);
     saveToStorage('edutrack_announcements_v3', announcementsList);
@@ -177,11 +159,9 @@ function formatTimestamp(isoString) {
 }
 const hideError = () => { const el = document.getElementById('error-banner'); if (el) el.style.display = 'none'; };
 function renderMessages(messages) {
-  const messagesBody = document.getElementById('messages-body');
-  const kpiTotalMessages = document.getElementById('kpi-total-messages');
+  const messagesBody = document.getElementById('messages-body'), kpiTotalMessages = document.getElementById('kpi-total-messages');
   if (!messagesBody) return;
-  const teacher = getActiveContact();
-  const list = Array.isArray(messages) ? messages : [];
+  const teacher = getActiveContact(), list = Array.isArray(messages) ? messages : [];
   if (kpiTotalMessages) kpiTotalMessages.textContent = String(list.length);
   if (list.length === 0) {
     messagesBody.innerHTML = `<div class="thread-empty-state"><h4>Inicie una conversación con ${escapeHtml(teacher.name)}</h4><p>Sus mensajes cuentan con acuse de recibo institucional y llegan directamente al buzón del docente.</p></div>`;
@@ -189,8 +169,7 @@ function renderMessages(messages) {
   }
   messagesBody.innerHTML = `<div class="thread-date-divider"><span>Historial Académico Verificado · ${escapeHtml(teacher.role)}</span></div>` +
     list.map((msg) => {
-      const isSentByMe = msg.senderId === CURRENT_USER_ID;
-      const senderLabel = isSentByMe ? 'Ximena Zambrano (Acudiente)' : teacher.name;
+      const isSentByMe = msg.senderId === CURRENT_USER_ID, senderLabel = isSentByMe ? 'Ximena Zambrano (Acudiente)' : teacher.name;
       const topicText = resolveTopicLabel(msg.topic || msg.subjectId);
       const topicBadge = topicText ? `<span class="message-topic-tag">${escapeHtml(topicText)}</span>` : '';
       const statusReceipt = isSentByMe ? `<span class="msg-receipt-check" title="Traza W3C: ${escapeHtml(msg.traceId || '4bf92f3577b34da6a3ce929d0e0e4736')}">✓✓ ${escapeHtml(msg.status || 'Entregado')}</span>` : '';
@@ -218,9 +197,7 @@ async function flushPendingOutbox(threadKey, receiverId) {
 }
 async function loadConversation() {
   hideError();
-  const reqStudentId = currentStudentId;
-  const reqContactId = activeContactId;
-  const threadKey = getThreadKey(reqStudentId, reqContactId);
+  const reqStudentId = currentStudentId, reqContactId = activeContactId, threadKey = getThreadKey(reqStudentId, reqContactId);
   try {
     await flushPendingOutbox(threadKey, reqContactId);
     if (reqStudentId === DEFAULT_STUDENT_ID) {
@@ -240,25 +217,17 @@ async function loadConversation() {
 async function handleSendMessage(e) {
   e.preventDefault();
   if (isSending) return;
-  const messageContentInput = document.getElementById('message-content');
-  const topicSelect = document.getElementById('message-topic-select');
-  const charCountSpan = document.getElementById('char-count');
-  const btnSend = document.getElementById('btn-send');
+  const messageContentInput = document.getElementById('message-content'), topicSelect = document.getElementById('message-topic-select');
+  const charCountSpan = document.getElementById('char-count'), btnSend = document.getElementById('btn-send');
   const content = messageContentInput?.value.trim();
   if (!content) return;
-  const reqStudentId = currentStudentId;
-  const reqContactId = activeContactId;
-  const threadKey = getThreadKey(reqStudentId, reqContactId);
-  const selectedTopic = topicSelect ? topicSelect.value : 'Consulta Académica';
-  const resolvedSubjectId = resolveSubjectUuid(selectedTopic);
-  const teacher = getActiveContact(reqStudentId, reqContactId);
-  const student = getActiveStudent(reqStudentId);
-  const telemetry = createTraceTelemetry();
-  const startTime = performance.now();
+  const reqStudentId = currentStudentId, reqContactId = activeContactId, threadKey = getThreadKey(reqStudentId, reqContactId);
+  const selectedTopic = topicSelect ? topicSelect.value : 'Consulta Académica', resolvedSubjectId = resolveSubjectUuid(selectedTopic);
+  const teacher = getActiveContact(reqStudentId, reqContactId), student = getActiveStudent(reqStudentId);
+  const telemetry = createTraceTelemetry(), startTime = performance.now();
   hideError(); isSending = true;
   if (btnSend) btnSend.disabled = true;
-  let persistedRemotely = false;
-  let remoteResponse = null;
+  let persistedRemotely = false, remoteResponse = null;
   try {
     remoteResponse = await sendMessageApi({ senderId: CURRENT_USER_ID, receiverId: reqContactId, content, subjectId: resolvedSubjectId, idempotencyKey: telemetry.idempotencyKey, telemetry });
     persistedRemotely = true;
@@ -292,9 +261,7 @@ async function handleSendMessage(e) {
   if (btnSend) btnSend.disabled = false;
 }
 async function updateBackendStatus() {
-  const backendLabel = document.getElementById('backend-label');
-  const statusDot = document.getElementById('status-dot');
-  const telemetryState = document.getElementById('telemetry-backend-state');
+  const backendLabel = document.getElementById('backend-label'), statusDot = document.getElementById('status-dot'), telemetryState = document.getElementById('telemetry-backend-state');
   isBackendOnline = await checkBackendHealth();
   if (statusDot) statusDot.className = `status-dot ${isBackendOnline ? 'online' : 'standby'}`;
   if (backendLabel) backendLabel.textContent = isBackendOnline ? 'Sincronizado en Línea (:8085)' : 'Canal Institucional Activo';
@@ -307,8 +274,7 @@ export function mount() {
   const studentSelector = document.getElementById('student-selector');
   studentSelector?.addEventListener('change', () => {
     currentStudentId = studentSelector.value;
-    const st = getActiveStudent();
-    const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    const st = getActiveStudent(), setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     setTxt('sidebar-student-grade', st.grade); setTxt('sidebar-student-avg', st.average); setTxt('sidebar-student-att', st.attendance);
     setTxt('conv-student-context', `Docentes de ${st.name.split(' ')[0]} · ${st.grade}`);
     const chipEl = document.getElementById('thread-student-chip');
@@ -323,16 +289,11 @@ export function mount() {
     tab.classList.add('active'); convFilterTab = tab.getAttribute('data-conv-filter') || 'ALL'; renderConversationsList();
   }));
   document.querySelectorAll('.template-chip').forEach((chip) => chip.addEventListener('click', () => {
-    const tpl = chip.getAttribute('data-template');
-    const input = document.getElementById('message-content');
-    const charCount = document.getElementById('char-count');
+    const tpl = chip.getAttribute('data-template'), input = document.getElementById('message-content'), charCount = document.getElementById('char-count');
     if (input && tpl) { input.value = tpl; input.focus(); if (charCount) charCount.textContent = String(tpl.length); }
   }));
   document.getElementById('btn-schedule-meeting')?.addEventListener('click', () => {
-    const teacher = getActiveContact();
-    const topicSelect = document.getElementById('message-topic-select');
-    const input = document.getElementById('message-content');
-    const charCount = document.getElementById('char-count');
+    const teacher = getActiveContact(), topicSelect = document.getElementById('message-topic-select'), input = document.getElementById('message-content'), charCount = document.getElementById('char-count');
     if (topicSelect) topicSelect.value = 'Solicitud de Atención a Padres';
     if (input) {
       input.value = `Estimado(a) ${teacher.name}, cordial saludo. Solicito amablemente agendar un espacio de atención a padres en su horario (${teacher.schedule}) para conversar sobre el seguimiento académico de ${getActiveStudent().name}.`;
@@ -341,9 +302,7 @@ export function mount() {
     showToast(`Plantilla de cita cargada para ${teacher.name}`, 'info');
   });
   document.getElementById('btn-export-thread')?.addEventListener('click', () => {
-    const teacher = getActiveContact();
-    const student = getActiveStudent();
-    const msgs = getThreadMessages(currentStudentId, activeContactId);
+    const teacher = getActiveContact(), student = getActiveStudent(), msgs = getThreadMessages(currentStudentId, activeContactId);
     const lines = [
       'COLEGIO EDUTRACK — CERTIFICADO DE COMUNICACIÓN DOCENTE-FAMILIA',
       `Estudiante: ${student.name} (${student.grade}) - Código: ${student.code}`,
@@ -352,15 +311,11 @@ export function mount() {
       '--------------------------------------------------------------------',
       ...msgs.map((m) => `[${new Date(m.createdAt).toLocaleString('es-CO')}] ${m.senderId === CURRENT_USER_ID ? 'Acudiente (Ximena Zambrano)' : teacher.name} (${m.topic || 'Consulta'}):\n${m.content}\nTraza W3C: ${m.traceId || '4bf92f3577b34da6a3ce929d0e0e4736'}\n`)
     ];
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }), url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = `Historial_EduTrack_${student.code}_${teacher.name.replace(/\s+/g, '_')}.txt`; a.click();
     URL.revokeObjectURL(url); showToast('Comprobante de conversación descargado', 'success');
   });
-  const categoryFilter = document.getElementById('announcement-category');
-  const dateFilter = document.getElementById('announcement-date');
-  const announcementModal = document.getElementById('announcement-modal');
+  const categoryFilter = document.getElementById('announcement-category'), dateFilter = document.getElementById('announcement-date'), announcementModal = document.getElementById('announcement-modal');
   attachDialogLightDismissFallback(announcementModal);
   categoryFilter?.addEventListener('change', () => { announcementFilters.category = categoryFilter.value; renderAnnouncements(); });
   dateFilter?.addEventListener('change', () => { announcementFilters.date = dateFilter.value; renderAnnouncements(); });
@@ -382,15 +337,12 @@ export function mount() {
   const formAddNote = document.getElementById('form-add-comm-note');
   formAddNote?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const input = document.getElementById('comm-note-input');
-    const text = input?.value.trim();
+    const input = document.getElementById('comm-note-input'), text = input?.value.trim();
     if (!text) return;
     commNotes.unshift({ id: 'cn-' + Date.now(), text, done: false });
     saveToStorage('edutrack_comm_notes_v3', commNotes); input.value = ''; renderCommNotes(); showToast('Recordatorio escolar guardado', 'success');
   });
-  const messageContentInput = document.getElementById('message-content');
-  const charCountSpan = document.getElementById('char-count');
-  const messageForm = document.getElementById('message-form');
+  const messageContentInput = document.getElementById('message-content'), charCountSpan = document.getElementById('char-count'), messageForm = document.getElementById('message-form');
   if (messageContentInput && charCountSpan) {
     messageContentInput.addEventListener('input', () => { charCountSpan.textContent = String(messageContentInput.value.length); });
     messageContentInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); messageForm?.requestSubmit(); } });
