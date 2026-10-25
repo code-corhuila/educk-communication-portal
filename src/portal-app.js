@@ -268,6 +268,7 @@ async function updateBackendStatus() {
   if (telemetryState) telemetryState.textContent = isBackendOnline ? 'Conectado (HTTP 200 · :8085)' : 'Modo Resiliente Local (Buffer Activo)';
 }
 export function mount() {
+  if (typeof window !== 'undefined' && (window.self !== window.top || window.location.search.includes('embedded=1'))) document.body?.classList?.add('is-embedded');
   if (typeof window !== 'undefined' && window.self !== window.top) document.body.classList.add('is-embedded-iframe');
   document.querySelectorAll('.nav-menu .nav-item').forEach((item) => item.addEventListener('click', (e) => { e.preventDefault(); const v = item.getAttribute('data-view'); if (v) switchView(v); }));
   document.getElementById('btn-refresh')?.addEventListener('click', () => { updateBackendStatus(); loadConversation(); renderAnnouncements(); renderReadReceiptsView(readReceiptsList, readsSearchQuery); showToast('Bandeja institucional sincronizada', 'success'); });
