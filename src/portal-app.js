@@ -32,9 +32,7 @@ function loadFromStorage(key, defaultValue) {
     return raw ? JSON.parse(raw) : (structuredClone ? structuredClone(defaultValue) : JSON.parse(JSON.stringify(defaultValue)));
   } catch { return defaultValue; }
 }
-function saveToStorage(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { console.error('Storage error:', e); }
-}
+const saveToStorage = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { console.error('Storage error:', e); } };
 const getThreadKey = (studentId = currentStudentId, contactId = activeContactId) => studentId === DEFAULT_STUDENT_ID ? contactId : `${studentId}:${contactId}`;
 function getThreadMessages(studentId = currentStudentId, contactId = activeContactId) {
   const key = getThreadKey(studentId, contactId);
@@ -79,17 +77,11 @@ function updateSidebarBadges() {
   const unreadMessagesCount = getStudentContacts().reduce((acc, c) => acc + (c.unread || 0), 0);
   const unreadAnnouncementsCount = announcementsList.filter((a) => !a.isRead).length;
   const navMsgBadge = document.getElementById('nav-unread-messages');
-  if (navMsgBadge) {
-    navMsgBadge.textContent = unreadMessagesCount > 0 ? String(unreadMessagesCount) : 'Al día';
-    navMsgBadge.className = unreadMessagesCount > 0 ? 'badge-pulse' : 'nav-count-badge subtle';
-  }
   const navAncBadge = document.getElementById('nav-unread-announcements');
-  if (navAncBadge) {
-    navAncBadge.textContent = String(unreadAnnouncementsCount);
-    navAncBadge.style.display = unreadAnnouncementsCount > 0 ? 'inline-flex' : 'none';
-  }
   const statTotalAnc = document.getElementById('stat-total-announcements');
   const statUnreadAnc = document.getElementById('stat-unread-announcements');
+  if (navMsgBadge) { navMsgBadge.textContent = unreadMessagesCount > 0 ? String(unreadMessagesCount) : 'Al día'; navMsgBadge.className = unreadMessagesCount > 0 ? 'badge-pulse' : 'nav-count-badge subtle'; }
+  if (navAncBadge) { navAncBadge.textContent = String(unreadAnnouncementsCount); navAncBadge.style.display = unreadAnnouncementsCount > 0 ? 'inline-flex' : 'none'; }
   if (statTotalAnc) statTotalAnc.textContent = String(announcementsList.length);
   if (statUnreadAnc) statUnreadAnc.textContent = String(unreadAnnouncementsCount);
 }
@@ -118,10 +110,7 @@ function renderConversationsList() {
     return matchesTab && (!q || c.name.toLowerCase().includes(q) || c.role.toLowerCase().includes(q) || c.lastMsg.toLowerCase().includes(q));
   });
   if (countBadge) countBadge.textContent = `${filtered.length} ${filtered.length === 1 ? 'Docente' : 'Docentes'}`;
-  if (filtered.length === 0) {
-    listEl.innerHTML = `<div class="conv-empty-state"><p>No se encontraron conversaciones con ese criterio.</p></div>`;
-    return;
-  }
+  if (filtered.length === 0) { listEl.innerHTML = `<div class="conv-empty-state"><p>No se encontraron conversaciones con ese criterio.</p></div>`; return; }
   listEl.innerHTML = filtered.map((c) => {
     const isActive = c.id === activeContactId;
     return `<div class="conversation-item ${isActive ? 'active' : ''} ${c.unread > 0 ? 'has-unread' : ''}" data-contact-id="${c.id}" role="option" aria-selected="${isActive}" tabindex="0"><div class="avatar-wrapper"><div class="avatar-teacher theme-${c.avatarTheme || 'blue'}">${escapeHtml(c.avatar)}</div><span class="presence-dot ${c.status}"></span></div><div class="conv-meta"><div class="conv-title-row"><strong>${escapeHtml(c.name)}</strong><span class="conv-time">${escapeHtml(c.lastTime || 'Hoy')}</span></div><p class="conv-subject">${escapeHtml(c.role)} · ${escapeHtml(c.grade)}</p><div class="conv-preview-row"><small class="conv-preview">${escapeHtml(c.lastMsg)}</small>${c.unread > 0 ? `<span class="conv-unread-pill">${c.unread}</span>` : ''}</div></div></div>`;
@@ -281,15 +270,10 @@ async function handleSendMessage(e) {
     topic: selectedTopic, content, createdAt: remoteResponse?.createdAt || new Date().toISOString(),
     traceId: telemetry.traceId, idempotencyKey: telemetry.idempotencyKey, status: persistedRemotely ? 'SINCRONIZADO' : 'PENDIENTE DE SINCRONIZACIÓN'
   };
-  if (persistedRemotely) {
-    if (!conversationThreads[threadKey]) conversationThreads[threadKey] = [];
-    conversationThreads[threadKey].push(newMessage);
-    saveToStorage('edutrack_threads_v3', conversationThreads);
-  } else {
-    if (!pendingOutbox[threadKey]) pendingOutbox[threadKey] = [];
-    pendingOutbox[threadKey].push(newMessage);
-    saveToStorage('edutrack_outbox_v3', pendingOutbox);
-  }
+  const targetStore = persistedRemotely ? conversationThreads : pendingOutbox;
+  if (!targetStore[threadKey]) targetStore[threadKey] = [];
+  targetStore[threadKey].push(newMessage);
+  saveToStorage(persistedRemotely ? 'edutrack_threads_v3' : 'edutrack_outbox_v3', targetStore);
   readReceiptsList.unshift({
     messageId: newMsgId, recipient: teacher.name, subject: `${selectedTopic} · ${student.name} (${student.grade})`,
     sentAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
@@ -324,15 +308,10 @@ export function mount() {
   studentSelector?.addEventListener('change', () => {
     currentStudentId = studentSelector.value;
     const st = getActiveStudent();
-    const gradeEl = document.getElementById('sidebar-student-grade');
-    const avgEl = document.getElementById('sidebar-student-avg');
-    const attEl = document.getElementById('sidebar-student-att');
-    const convCtx = document.getElementById('conv-student-context');
+    const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setTxt('sidebar-student-grade', st.grade); setTxt('sidebar-student-avg', st.average); setTxt('sidebar-student-att', st.attendance);
+    setTxt('conv-student-context', `Docentes de ${st.name.split(' ')[0]} · ${st.grade}`);
     const chipEl = document.getElementById('thread-student-chip');
-    if (gradeEl) gradeEl.textContent = st.grade;
-    if (avgEl) avgEl.textContent = st.average;
-    if (attEl) attEl.textContent = st.attendance;
-    if (convCtx) convCtx.textContent = `Docentes de ${st.name.split(' ')[0]} · ${st.grade}`;
     if (chipEl) chipEl.innerHTML = `Estudiante: <strong>${escapeHtml(st.name)} (${escapeHtml(st.grade)})</strong>`;
     updateSidebarBadges(); renderConversationsList(); renderActiveThreadHeader(); loadConversation();
     showToast(`Contexto cambiado a ${st.name} (${st.grade})`, 'info');
@@ -366,12 +345,9 @@ export function mount() {
     const student = getActiveStudent();
     const msgs = getThreadMessages(currentStudentId, activeContactId);
     const lines = [
-      '====================================================================',
       'COLEGIO EDUTRACK — CERTIFICADO DE COMUNICACIÓN DOCENTE-FAMILIA',
-      '====================================================================',
       `Estudiante: ${student.name} (${student.grade}) - Código: ${student.code}`,
-      `Docente Interlocutor: ${teacher.name} (${teacher.role})`,
-      `Correo Institucional: ${teacher.email}`,
+      `Docente Interlocutor: ${teacher.name} (${teacher.role}) · ${teacher.email}`,
       `Fecha de Emisión: ${new Date().toLocaleString('es-CO')}`,
       '--------------------------------------------------------------------',
       ...msgs.map((m) => `[${new Date(m.createdAt).toLocaleString('es-CO')}] ${m.senderId === CURRENT_USER_ID ? 'Acudiente (Ximena Zambrano)' : teacher.name} (${m.topic || 'Consulta'}):\n${m.content}\nTraza W3C: ${m.traceId || '4bf92f3577b34da6a3ce929d0e0e4736'}\n`)
