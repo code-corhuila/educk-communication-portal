@@ -1,272 +1,40 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EduTrack — Portal de Comunicación (HU-004)</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/src/style.css" />
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Colegio EduTrack — Portal Institucional de Comunicaciones y Atención a Padres</title><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /><link rel="stylesheet" href="/src/style.css" /><link rel="stylesheet" href="/src/workspace.css" />
 </head>
 <body>
-  <div class="app-layout">
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-icon">💬</div>
-        <div class="brand-text">
-          <h2>EduTrack</h2>
-          <span>Portal Comunicación</span>
-        </div>
-      </div>
-
-      <nav class="nav-menu">
-        <a href="#" class="nav-item active" data-view="mensajeria">
-          <span class="nav-icon">💬</span>
-          <span>Mensajería Directa</span>
-          <span class="badge-pulse">HU-004</span>
-        </a>
-        <a href="#" class="nav-item" data-view="canales">
-          <span class="nav-icon">📢</span>
-          <span>Canales y Circulares</span>
-        </a>
-        <a href="#" class="nav-item" data-view="lecturas">
-          <span class="nav-icon">👁️</span>
-          <span>Confirmación Lecturas</span>
-        </a>
-        <a href="#" class="nav-item" data-view="contactos">
-          <span class="nav-icon">👥</span>
-          <span>Directorio Institucional</span>
-        </a>
-      </nav>
-
-      <div class="sidebar-footer">
-        <div class="backend-status" id="backend-status">
-          <span class="status-dot online"></span>
-          <span class="status-label">Backend: <strong id="backend-label">Conectado (8085)</strong></span>
-        </div>
-        <div class="user-chip">
-          <div class="avatar">XZ</div>
-          <div class="user-meta">
-            <strong>Ximena Zambrano</strong>
-            <small>Tutor / Acudiente</small>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main Content Area -->
-    <main class="main-content">
-      <!-- Top Navbar -->
-      <header class="topbar">
-        <div class="breadcrumb" id="top-breadcrumb">
-          <span>EduTrack</span> &gt; <span id="bc-module">Comunicación</span> &gt; <strong class="current" id="bc-view">Chat Padre-Profesor (HU-004)</strong>
-        </div>
-        <div class="topbar-actions" id="topbar-actions">
-          <button id="btn-refresh" class="btn btn-secondary" title="Actualizar conversación">
-            🔄 Recargar
-          </button>
-        </div>
-      </header>
-
-      <!-- VIEW: Mensajería Directa (HU-004) -->
-      <div id="view-mensajeria" class="app-view active" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-        <!-- KPI Ribbon -->
-        <section class="kpi-ribbon">
-          <div class="kpi-card">
-            <div class="kpi-info">
-              <span class="kpi-title">Mensajes en Conversación</span>
-              <span class="kpi-value" id="kpi-total-messages">0</span>
-            </div>
-            <div class="kpi-icon">📬</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-info">
-              <span class="kpi-title">Profesor Activo</span>
-              <span class="kpi-value" style="font-size: 1.1rem; padding-top: 6px;">Prof. Carlos Mendoza</span>
-            </div>
-            <div class="kpi-icon">👨‍🏫</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-info">
-              <span class="kpi-title">Gobernanza de Mensajería</span>
-              <span class="kpi-value" style="font-size: 1.0rem; color: var(--success-green); padding-top: 6px;">Idempotencia Activa</span>
-            </div>
-            <div class="kpi-icon">🔒</div>
-          </div>
-        </section>
-
-        <!-- Chat Container (Split View) -->
-        <section class="chat-container">
-          <!-- Conversations List (Left) -->
-          <div class="conversations-panel">
-            <div class="panel-header">
-              <h3>Conversaciones</h3>
-              <span class="conv-count">1 Activa</span>
-            </div>
-            <div class="conversations-list">
-              <div class="conversation-item active">
-                <div class="avatar-teacher">CM</div>
-                <div class="conv-meta">
-                  <div class="conv-title-row">
-                    <strong>Prof. Carlos Mendoza</strong>
-                    <span class="conv-time">En línea</span>
-                  </div>
-                  <p class="conv-subject">Matemáticas — Grado 10-A</p>
-                  <small class="conv-preview" id="conv-preview">Cargando último mensaje...</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Message Thread Canvas (Right) -->
-          <div class="thread-panel">
-            <div class="thread-header">
-              <div class="thread-user-info">
-                <div class="avatar-teacher">CM</div>
-                <div>
-                  <h4>Prof. Carlos Mendoza</h4>
-                  <p class="thread-subtitle">Docente Titular de Matemáticas — Consulta Académica</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Messages Scroll Area -->
-            <div class="messages-body" id="messages-body">
-              <div class="loading-spinner" id="loading-spinner">
-                Cargando mensajes desde el backend (:8085)...
-              </div>
-            </div>
-
-            <!-- Send Message Input Bar -->
-            <div class="message-composer">
-              <!-- Error Banner -->
-              <div class="alert alert-error" id="error-banner" style="display: none;">
-                <span id="error-message">Error</span>
-                <button class="alert-close" id="btn-close-alert">&times;</button>
-              </div>
-
-              <form id="message-form" class="composer-form">
-                <div class="input-wrapper">
-                  <textarea
-                    id="message-content"
-                    placeholder="Escribe un mensaje al docente aquí... (ej. Buenas tardes profesor, quisiera consultar sobre la tarea)"
-                    maxlength="500"
-                    rows="2"
-                    required
-                  ></textarea>
-                  <div class="char-counter"><span id="char-count">0</span> / 500</div>
-                </div>
-                <button type="submit" id="btn-send" class="btn btn-primary">
-                  <span>Enviar</span>
-                  <span class="send-icon">➤</span>
-                </button>
-              </form>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- VIEW: Canales y Circulares Institucionales -->
-      <div id="view-canales" class="app-view">
-        <div class="view-scrollable">
-          <div class="toolbar-row">
-            <div>
-              <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--navy-dark);">Canales y Circulares Institucionales</h2>
-              <p style="font-size: 0.825rem; color: var(--text-muted); margin-top: 2px;">
-                Comunicados oficiales emitidos por Rectoría, Coordinación y Docentes
-              </p>
-            </div>
-          </div>
-          <div class="announcement-filters" aria-label="Filtros de comunicados">
-            <label for="announcement-category">
-              Categoría
-              <select id="announcement-category" class="form-select" aria-label="Filtrar comunicados por categoría">
-                <option value="ALL">Todas</option>
-                <option value="URGENT">Urgente</option>
-                <option value="GENERAL">General</option>
-                <option value="ACADEMIC">Académico</option>
-              </select>
-            </label>
-            <label for="announcement-date">
-              Fecha
-              <input id="announcement-date" class="form-input" type="date" aria-label="Filtrar comunicados por fecha">
-            </label>
-            <button id="btn-clear-announcement-filters" class="btn btn-secondary" type="button">Limpiar filtros</button>
-          </div>
-          <div id="announcements-container" style="margin-top: 16px;">
-            <!-- Dynamically populated -->
-          </div>
-        </div>
-      </div>
-
-      <div id="announcement-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="announcement-modal-title">
-        <div class="modal-card announcement-modal-card">
-          <div class="modal-head">
-            <h3 id="announcement-modal-title"></h3>
-            <button id="btn-close-announcement" class="btn-close-modal" type="button" aria-label="Cerrar comunicado">×</button>
-          </div>
-          <div class="modal-content">
-            <p id="announcement-modal-meta" class="announcement-modal-meta"></p>
-            <p id="announcement-modal-content"></p>
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEW: Confirmaciones de Lectura (message_reads) -->
-      <div id="view-lecturas" class="app-view">
-        <div class="view-scrollable">
-          <div class="toolbar-row">
-            <div>
-              <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--navy-dark);">Confirmaciones de Lectura y Entrega</h2>
-              <p style="font-size: 0.825rem; color: var(--text-muted); margin-top: 2px;">
-                Registro de confirmaciones auditables respaldado en la tabla <code>message_reads</code> (ADR-003)
-              </p>
-            </div>
-          </div>
-          <div class="data-table-container" style="margin-top: 16px;">
-            <table class="custom-table">
-              <thead>
-                <tr>
-                  <th>ID Mensaje</th>
-                  <th>Destinatario</th>
-                  <th>Fecha de Envío</th>
-                  <th>Estado</th>
-                  <th>Fecha de Lectura</th>
-                  <th>Canal</th>
-                </tr>
-              </thead>
-              <tbody id="reads-table-body">
-                <!-- Dynamically populated -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEW: Directorio de Contactos -->
-      <div id="view-contactos" class="app-view">
-        <div class="view-scrollable">
-          <div class="toolbar-row">
-            <div>
-              <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--navy-dark);">Directorio Institucional de Contactos</h2>
-              <p style="font-size: 0.825rem; color: var(--text-muted); margin-top: 2px;">
-                Docentes y personal directivo asignados al acudiente
-              </p>
-            </div>
-          </div>
-          <div id="contacts-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-top: 16px;">
-            <!-- Dynamically populated -->
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- Toast Container -->
-  <div id="toast-container"></div>
-
-  <script type="module" src="/src/app.js"></script>
+<div class="app-layout">
+<aside class="sidebar" aria-label="Navegación institucional"><div class="sidebar-brand"><div class="brand-logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div><div class="brand-titles"><h1>EduTrack</h1><span class="brand-subtitle">Portal Familias · Vigencia 2026-B</span></div></div>
+<div class="student-context-card"><div class="student-context-header"><span class="context-label">Estudiante Matriculado</span><span class="student-status-pill">Activo</span></div><select id="student-selector" class="student-selector" aria-label="Seleccionar estudiante"><option value="s-4402-juan-chala" selected>Juan Sebastián Chala — Grado 10°A</option> <option value="s-4403-valeria-chala">Valeria Chala Zambrano — Grado 6°B</option></select><div class="student-context-metrics"><div><small>Curso</small><strong id="sidebar-student-grade">10°A</strong></div><div><small>Promedio</small><strong id="sidebar-student-avg">4.4 / 5.0</strong></div><div><small>Asistencia</small><strong id="sidebar-student-att">98.2%</strong></div></div></div><nav class="nav-menu" aria-label="Secciones de comunicación"><div class="nav-section">GESTIÓN COMUNICACIONAL</div><a href="#mensajeria" class="nav-item active" data-view="mensajeria"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span>Bandeja Docente</span><span class="badge-pulse" id="nav-unread-messages">2</span></a><a href="#canales" class="nav-item" data-view="canales"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span>Circulares Oficiales</span><span class="nav-count-badge" id="nav-unread-announcements">2</span></a><a href="#lecturas" class="nav-item" data-view="lecturas"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span><span>Historial y Acuses</span></a><a href="#contactos" class="nav-item" data-view="contactos"><span class="nav-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span>Directorio Docente</span></a><div class="nav-section">SEGUIMIENTO FAMILIAR</div><div class="sidebar-notes-widget"><div class="sidebar-notes-header"><span>Recordatorios Escolares</span></div><div id="comm-notes-list" class="sidebar-notes-list"></div>
+<form id="form-add-comm-note" class="sidebar-notes-form"><input type="text" id="comm-note-input" placeholder="Nuevo compromiso o nota..." required /><button type="submit" aria-label="Guardar recordatorio">+</button></form></div></nav><div class="sidebar-footer">
+<div class="user-card"><div class="avatar">XZ</div><div class="user-info"><strong>Ximena Zambrano</strong><small>Acudiente Titular · Verificada</small></div><button type="button" id="btn-open-telemetry" class="btn-telemetry-trigger" title=" Estado de conexión e integridad del servicio"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button></div></div></aside>
+<div class="main-wrapper">
+<header class="topbar"><div class="topbar-left"><div class="breadcrumbs"><span class="crumb-root">Colegio EduTrack</span><span class="crumb-sep">/</span><span class="crumb-muted" id="bc-module">Comunicaciones</span><span class="crumb-sep">/</span><span class="crumb-current" id="bc-view">Bandeja de Mensajería Docente</span></div></div><div class="topbar-right"><div class="academic-period-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Periodo Académico 2026-II · Corte 2</span></div><div class="service-status" id="backend-status-pill"><span class="status-dot online" id="status-dot"></span><span id="backend-label">Canal Institucional Activo</span></div><button class="btn-icon" id="btn-refresh" title="Actualizar bandeja de mensajes" aria-label="Actualizar bandeja de mensajes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button></div></header><div id="error-banner" class="alert-banner" style="display: none;" role="alert"><div class="alert-content"><span class="alert-icon" aria-hidden="true">!</span><div><strong>Aviso de Sincronización</strong><p id="error-message">El mensaje fue almacenado en la bandeja segura y se sincronizará automáticamente.</p></div></div><button id="btn-close-alert" class="alert-close" aria-label="Cerrar aviso">&times;</button></div>
+<section id="view-mensajeria" class="app-view active">
+<section class="kpi-strip" aria-label="Resumen de comunicación">
+<div class="kpi-card"><div class="kpi-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="kpi-data"><span class="kpi-label">Mensajes en este Hilo</span><h3 class="kpi-value" id="kpi-total-messages">0</h3></div><span class="kpi-badge success">Respaldo institucional</span></div>
+<div class="kpi-card"><div class="kpi-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></div><div class="kpi-data"><span class="kpi-label">Docente Interlocutor</span><h3 class="kpi-value kpi-value-sm" id="kpi-active-teacher">Prof. Carlos Mendoza</h3></div><span class="kpi-badge info" id="kpi-teacher-schedule">Mar y Jue · 2:00 p.m. – 4:00 p.m.</span></div>
+<div class="kpi-card"><div class="kpi-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="kpi-data"><span class="kpi-label">Tiempo Promedio Respuesta</span><h3 class="kpi-value kpi-value-sm">Menos de 4 horas</h3></div><span class="kpi-badge purple-badge">Atención prioritaria</span></div></section>
+<main class="workspace-grid">
+<div class="conversations-panel"><div class="panel-header"><div><h3>Conversaciones</h3><p class="panel-subtitle" id="conv-student-context">Docentes de Juan Sebastián · 10°A</p></div><span class="badge-count" id="conv-count-badge">4 Docentes</span></div><div class="conv-search-box"><input type="search" id="conv-search-input" class="input-control conv-search-input" placeholder="Buscar docente, asignatura o tema..." aria-label="Buscar conversación" /></div><div class="conv-filter-tabs" role="tablist" aria-label="Filtrar conversaciones"><button type="button" class="conv-tab active" data-conv-filter="ALL">Todos</button> <button type="button" class="conv-tab" data-conv-filter="UNREAD">No leídos</button><button type="button" class="conv-tab" data-conv-filter="DOCENTE">Docentes</button> <button type="button" class="conv-tab" data-conv-filter="COORDINACION">Coordinación</button></div><div class="conversations-list" id="conversations-list" role="listbox" aria-label="Lista de conversaciones con docentes"></div></div>
+<div class="thread-panel"><div class="thread-header"><div class="thread-user-info"><div class="avatar-teacher" id="thread-teacher-avatar">CM</div><div><div class="thread-title-line"><h4 id="thread-teacher-name">Prof. Carlos Mendoza</h4><span class="teacher-presence-badge" id="thread-teacher-status">Disponible</span></div><p class="thread-subtitle" id="thread-teacher-subtitle">Titular de Matemáticas · Grado 10°A · Bloque B, Sala 204</p></div></div><div class="thread-header-actions"><span class="thread-student-chip" id="thread-student-chip">Estudiante: <strong>Juan Sebastián Chala (10°A)</strong></span><button type="button" class="btn btn-secondary btn-sm" id="btn-schedule-meeting" title="Solicitar cita de atención a padres">Solicitar Cita</button><button type="button" class="btn btn-secondary btn-sm" id="btn-export-thread" title="Descargar historial certificado de conversación">Exportar Historial</button></div></div><div id="messages-body" class="messages-body" aria-live="polite"></div>
+<form id="message-form" class="composer-box">
+<div class="composer-toolbar"><div class="composer-subject-group"><label for="message-topic-select">Asunto:</label><select id="message-topic-select" class="composer-topic-select"><option value="Consulta Académica">Consulta Académica</option> <option value="Seguimiento de Calificación">Seguimiento de Calificación</option><option value="Justificación de Inasistencia">Justificación de Inasistencia</option> <option value="Solicitud de Atención a Padres">Solicitud de Atención a Padres</option><option value="Observación General">Observación General</option></select></div><div class="composer-quick-templates"><span class="templates-label">Respuesta rápida:</span><button type="button" class="template-chip" data-template="Buenas tardes profesor(a), agradezco me confirme el avance académico de mi acudido en las actividades de esta semana.">Avance semanal</button><button type="button" class="template-chip" data-template="Estimado(a) docente, solicito comedidamente agendar una breve reunión en su horario de atención a padres.">Agendar atención</button><button type="button" class="template-chip" data-template="Muchas gracias por la información oportuna, quedamos atentos desde casa a las indicaciones.">Confirmar recibido</button></div></div><div class="composer-input-wrapper"><textarea id="message-content" placeholder="Escriba su mensaje para el docente (Presione Enter para enviar o Shift+Enter para nueva línea)..." rows="2" maxlength="2000" required></textarea></div>
+<div class="composer-actions"><div class="composer-hints"><span class="security-hint"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Comunicación oficial registrada en el expediente estudiantil · <span id="char-count">0</span>/2000 caracteres
+                  </span></div><button type="submit" id="btn-send" class="btn btn-primary"><span>Enviar Mensaje</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></form></div></main></section>
+<section id="view-canales" class="app-view">
+<div class="view-container"><div class="view-header-row"><div><h2>Circulares y Comunicados Oficiales</h2><p class="text-muted">Publicaciones de Rectoría, Coordinación Académica y Consejo Estudiantil con constancia de lectura.</p></div><div class="circulars-summary-pills"><span class="summary-pill"><strong id="stat-total-announcements">4</strong> Emitidos</span><span class="summary-pill unread"><strong id="stat-unread-announcements">2</strong> Por confirmar lectura</span></div></div>
+<div class="announcement-toolbar" role="search" aria-label="Filtrar comunicados"><div class="filter-field"><label for="announcement-category">Categoría Institucional</label><select id="announcement-category" class="input-control"><option value="ALL">Todas las categorías</option> <option value="URGENT">Urgente / Citación</option><option value="ACADEMIC">Académico</option> <option value="GENERAL">General</option></select></div><div class="filter-field"><label for="announcement-date">Fecha de Publicación</label><input type="date" id="announcement-date" class="input-control" /></div><button id="btn-clear-announcement-filters" class="btn btn-secondary" type="button">Restablecer filtros</button></div><div id="announcements-container" class="announcements-stack"></div></div></section>
+<section id="view-lecturas" class="app-view">
+<div class="view-container"><div class="view-header-row"><div><h2>Registro Certificado de Acuses de Recibo</h2><p class="text-muted">Trazabilidad completa de entrega y lectura de comunicaciones entre la familia y el cuerpo docente.</p></div><div class="reads-filter-group"><input type="search" id="reads-search-input" class="input-control" placeholder="Filtrar por docente o código..." aria-label="Filtrar acuses de recibo" /></div></div><div class="card-box">
+<table class="data-table">
+<thead><tr><th>Radicado</th> <th>Destinatario</th><th>Asunto / Materia</th> <th>Fecha de Envío</th><th>Estado de Entrega</th> <th>Confirmación de Lectura</th><th>Verificación</th></tr></thead>
+<tbody id="reads-table-body"></tbody></table></div></div></section>
+<section id="view-contactos" class="app-view">
+<div class="view-container"><div class="view-header-row"><div><h2>Directorio Docente y Coordinación Académica</h2><p class="text-muted">Equipo docente asignado al grado 10°A con horarios oficiales de atención a padres de familia.</p></div></div><div class="grid-cards" id="contacts-grid"></div></div></section></div></div>
+<dialog id="announcement-modal" class="modal-backdrop" closedby="any" aria-labelledby="announcement-modal-title">
+<div class="modal-card"><div class="modal-header"><div><span class="modal-eyebrow">CIRCULAR INSTITUCIONAL OFICIAL</span><h3 id="announcement-modal-title">Comunicado</h3><small id="announcement-modal-meta" class="text-muted"></small></div><button id="btn-close-announcement" class="btn-icon" type="button" aria-label="Cerrar comunicado">&times;</button></div><div class="modal-body"><p id="announcement-modal-content"></p></div><div class="modal-footer"><span class="modal-read-confirmation">Al cerrar esta ventana queda registrada la constancia de lectura del acudiente.</span><button id="btn-Ack-announcement" class="btn btn-primary" type="button">Entendido y Confirmar Lectura</button></div></div></dialog>
+<dialog id="telemetry-modal" class="modal-backdrop" closedby="any" aria-labelledby="telemetry-modal-title"><div class="modal-card modal-card-wide"><div class="modal-header"><div><span class="modal-eyebrow">DIAGNÓSTICO DEPLIEGUE DISTRIBUIDO · W3C TRACE CONTEXT</span><h3 id="telemetry-modal-title">Estado de Conectividad, Idempotencia y Trazabilidad</h3><small class="text-muted">Propagación de encabezados HTTP hacia <code>educk-communication-api (:8085)</code></small></div><button id="btn-close-telemetry" class="btn-icon" type="button" aria-label="Cerrar diagnóstico">&times;</button></div><div class="modal-body"><div class="telemetry-stats-grid"><div class="telemetry-stat-box"><small>Servicio</small><strong>educk-communication-portal</strong></div> <div class="telemetry-stat-box"><small>Protocolo Trazas</small><strong>W3C traceparent (00-trace-span-01)</strong></div><div class="telemetry-stat-box"><small>Deduplicación</small><strong>Idempotency-Key (UUID v4)</strong></div> <div class="telemetry-stat-box"><small>Estado API :8085</small><strong id="telemetry-backend-state">Verificando...</strong></div></div><div class="telemetry-log-header"><span>Últimos Eventos de Telemetría Estructurada (JSON)</span><span class="badge-tag info">CP2 · Semana 11</span></div><pre id="telemetry-json-viewer" class="telemetry-json-pre"></pre></div><div class="modal-footer"><small class="text-muted">Cada mensaje enviado genera un <code>trace_id</code>, <code>span_id</code> y <code>Idempotency-Key</code> únicos.</small><button id="btn-close-telemetry-foot" class="btn btn-secondary" type="button">Cerrar panel técnico</button></div></div></dialog><div id="toast-container" class="toast-container" aria-live="polite"></div><script type="module" src="/src/portal-app.js"></script>
 </body>
 </html>
