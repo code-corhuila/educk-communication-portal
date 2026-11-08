@@ -1,5 +1,40 @@
 // API Client for EduTrack Communication Microservice (Spring Boot :8085)
-// Includes W3C Trace Context (traceparent), Correlation ID, and Idempotency-Key propagation
+// Includes W3C Trace Context (traceparent), Correlation ID, Idempotency-Key, and in-memory JWT Bearer token
+const ALLOWED_ROLES = new Set(['ACUDIENTE', 'DOCENTE', 'DIRECTIVO']);
+export const SHELL_ORIGIN = new URL((typeof import.meta !== 'undefined' && import.meta.env?.VITE_SHELL_ORIGIN) || 'http://localhost:3000').origin;
+let portalAccessToken = '';
+export function setPortalAccessToken(token) {
+  portalAccessToken = typeof token === 'string' ? token : '';
+}
+export function getPortalAccessToken() {
+  return portalAccessToken;
+}
+export function isTrustedShellOrigin(candidate, trustedUrl = SHELL_ORIGIN) {
+  try {
+    if ('Origin' in globalThis && typeof globalThis.Origin?.from === 'function') {
+      let candidateOrigin;
+      try { candidateOrigin = globalThis.Origin.from(candidate); } catch {
+        const raw = typeof MessageEvent !== 'undefined' && candidate instanceof MessageEvent ? candidate.origin : String(candidate ?? '');
+        candidateOrigin = globalThis.Origin.from(raw);
+      }
+      return candidateOrigin.isSameOrigin(globalThis.Origin.from(trustedUrl));
+    }
+    const rawUrl = typeof candidate === 'string' ? candidate : (typeof candidate?.origin === 'string' ? candidate.origin : '');
+    const candidateParsed = new URL(rawUrl), trustedParsed = new URL(trustedUrl);
+    return candidateParsed.origin !== 'null' && candidateParsed.origin === trustedParsed.origin;
+  } catch {
+    return false;
+  }
+}
+export function extractShellContext(event, trustedUrl = SHELL_ORIGIN) {
+  if (!isTrustedShellOrigin(event, trustedUrl)) return null;
+  const data = event?.data;
+  if (!data || data.type !== 'edutrack:context' || typeof data.token !== 'string' || !data.token) return null;
+  const role = typeof data.role === 'string' ? data.role.trim().toUpperCase() : '';
+  if (!ALLOWED_ROLES.has(role)) return null;
+  setPortalAccessToken(data.token);
+  return { token: data.token, role, user: data.user || null, view: data.view || '' };
+}
 const DEFAULT_API_URL =
   typeof window !== 'undefined' &&
   window.location.hostname !== 'localhost' &&
@@ -91,14 +126,16 @@ export async function checkBackendHealth() {
 }
 export async function fetchConversation(user1, user2) {
   const telemetry = createTraceTelemetry();
+  const headers = {
+    traceparent: telemetry.traceparent,
+    'X-Correlation-Id': telemetry.correlationId
+  };
+  if (portalAccessToken) {
+    headers.Authorization = `Bearer ${portalAccessToken}`;
+  }
   const response = await fetchWithTimeout(
     `${API_BASE_URL}/messages/conversation?user1=${encodeURIComponent(user1)}&user2=${encodeURIComponent(user2)}`,
-    {
-      headers: {
-        traceparent: telemetry.traceparent,
-        'X-Correlation-Id': telemetry.correlationId
-      }
-    },
+    { headers },
     2500
   );
   if (!response.ok) {
@@ -123,6 +160,9 @@ export async function sendMessageApi({
     traceparent: telemetry.traceparent,
     'X-Correlation-Id': telemetry.correlationId
   };
+  if (portalAccessToken) {
+    headers.Authorization = `Bearer ${portalAccessToken}`;
+  }
   const response = await fetchWithTimeout(
     `${API_BASE_URL}/messages`,
     {

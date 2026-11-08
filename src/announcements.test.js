@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { filterAnnouncements, markAnnouncementRead, normalizeAnnouncements } from './announcements.js';
-import { createTraceTelemetry, resolveSubjectUuid, resolveTopicLabel } from './api.js';
+import { createTraceTelemetry, extractShellContext, getPortalAccessToken, resolveSubjectUuid, resolveTopicLabel, setPortalAccessToken } from './api.js';
 const announcements = [
   { id: '1', category: 'URGENT', date: '2026-09-18', isRead: false },
   { id: '2', category: 'GENERAL', date: '2026-09-15', isRead: false },
@@ -53,4 +53,15 @@ test('generates W3C traceparent and idempotency telemetry headers', () => {
   assert.match(telemetry.traceparent, /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/);
   assert.match(telemetry.correlationId, /^corr-/);
   assert.ok(telemetry.idempotencyKey.length >= 16);
+});
+
+test('extractShellContext validates shell origin and ignores invalid or opaque origins', () => {
+  setPortalAccessToken('');
+  assert.equal(extractShellContext({ origin: 'http://evil.example', data: { type: 'edutrack:context', token: 'jwt', role: 'DIRECTIVO' } }, 'http://localhost:3000'), null);
+  assert.equal(extractShellContext({ origin: 'null', data: { type: 'edutrack:context', token: 'jwt', role: 'DOCENTE' } }, 'http://localhost:3000'), null);
+  assert.equal(getPortalAccessToken(), '');
+
+  const accepted = extractShellContext({ origin: 'http://localhost:3000', data: { type: 'edutrack:context', token: 'rs256-jwt', role: 'DOCENTE', view: 'mensajeria' } }, 'http://localhost:3000');
+  assert.equal(accepted?.role, 'DOCENTE');
+  assert.equal(getPortalAccessToken(), 'rs256-jwt');
 });

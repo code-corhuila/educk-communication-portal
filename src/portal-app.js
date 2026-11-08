@@ -1,5 +1,5 @@
 import './workspace.css';
-import { checkBackendHealth, createTraceTelemetry, fetchConversation, resolveSubjectUuid, resolveTopicLabel, sendMessageApi } from './api.js';
+import { checkBackendHealth, createTraceTelemetry, extractShellContext, fetchConversation, getPortalAccessToken, resolveSubjectUuid, resolveTopicLabel, sendMessageApi, SHELL_ORIGIN } from './api.js';
 import { markAnnouncementRead, normalizeAnnouncements } from './announcements.js';
 import { CURRENT_USER_ID, INITIAL_ANNOUNCEMENTS, INITIAL_COMMUNICATION_NOTES, INITIAL_CONTACTS, INITIAL_CONVERSATION_THREADS, INITIAL_READ_RECEIPTS, STUDENTS_DIRECTORY, TEACHER_USER_ID } from './threads-data.js';
 import { attachDialogLightDismissFallback, closeModalDialog, escapeHtml, openModalDialog, renderAnnouncementsView, renderCommNotesView, renderContactsView, renderReadReceiptsView, showToast, updateTelemetryModalView } from './views.js';
@@ -13,6 +13,7 @@ let announcementFilters = { category: 'ALL', date: '' }, announcementTriggerId =
 let readReceiptsList = loadFromStorage('edutrack_read_receipts_v3', INITIAL_READ_RECEIPTS);
 let commNotes = loadFromStorage('edutrack_comm_notes_v3', INITIAL_COMMUNICATION_NOTES);
 let convFilterTab = 'ALL', convSearchQuery = '', readsSearchQuery = '', isSending = false, isBackendOnline = false;
+let activeUserId = CURRENT_USER_ID, activeUserName = 'Usuario Institucional', activeRole = 'ACUDIENTE', shellReady = false;
 const telemetryLogs = [{
   timestamp: new Date().toISOString(), level: 'INFO', service: 'educk-communication-portal', version: '2.0.0', environment: 'qa',
   trace_id: '4bf92f3577b34da6a3ce929d0e0e4736', span_id: '00f067aa0ba902b7', correlation_id: 'corr-msg-99120',
@@ -169,7 +170,7 @@ function renderMessages(messages) {
   }
   messagesBody.innerHTML = `<div class="thread-date-divider"><span>Historial Académico Verificado · ${escapeHtml(teacher.role)}</span></div>` +
     list.map((msg) => {
-      const isSentByMe = msg.senderId === CURRENT_USER_ID, senderLabel = isSentByMe ? 'Ximena Zambrano (Acudiente)' : teacher.name;
+      const isSentByMe = msg.senderId === activeUserId || msg.senderId === CURRENT_USER_ID, senderLabel = isSentByMe ? activeUserName : teacher.name;
       const topicText = resolveTopicLabel(msg.topic || msg.subjectId);
       const topicBadge = topicText ? `<span class="message-topic-tag">${escapeHtml(topicText)}</span>` : '';
       const statusReceipt = isSentByMe ? `<span class="msg-receipt-check" title="Traza W3C: ${escapeHtml(msg.traceId || '4bf92f3577b34da6a3ce929d0e0e4736')}">✓✓ ${escapeHtml(msg.status || 'Entregado')}</span>` : '';
@@ -179,7 +180,7 @@ function renderMessages(messages) {
 }
 async function flushPendingOutbox(threadKey, receiverId) {
   const queued = pendingOutbox[threadKey] || [];
-  if (queued.length === 0) return;
+  if (queued.length === 0 || !getPortalAccessToken()) return;
   const remaining = [];
   for (const item of queued) {
     try {
@@ -201,7 +202,7 @@ async function loadConversation() {
   try {
     await flushPendingOutbox(threadKey, reqContactId);
     if (reqStudentId === DEFAULT_STUDENT_ID) {
-      const remoteMessages = await fetchConversation(CURRENT_USER_ID, reqContactId);
+      const remoteMessages = getPortalAccessToken() ? await fetchConversation(activeUserId, reqContactId) : [];
       if (Array.isArray(remoteMessages) && remoteMessages.length > 0) {
         conversationThreads[threadKey] = remoteMessages.map((m) => ({
           ...m, topic: m.topic || resolveTopicLabel(m.subjectId), status: m.status || 'SINCRONIZADO', traceId: m.traceId || '4bf92f3577b34da6a3ce929d0e0e4736'
@@ -229,13 +230,14 @@ async function handleSendMessage(e) {
   if (btnSend) btnSend.disabled = true;
   let persistedRemotely = false, remoteResponse = null;
   try {
-    remoteResponse = await sendMessageApi({ senderId: CURRENT_USER_ID, receiverId: reqContactId, content, subjectId: resolvedSubjectId, idempotencyKey: telemetry.idempotencyKey, telemetry });
+    if (!getPortalAccessToken()) throw new Error('offline');
+    remoteResponse = await sendMessageApi({ senderId: activeUserId, receiverId: reqContactId, content, subjectId: resolvedSubjectId, idempotencyKey: telemetry.idempotencyKey, telemetry });
     persistedRemotely = true;
   } catch { persistedRemotely = false; }
   const durationMs = Math.max(8, Math.round(performance.now() - startTime));
   const newMsgId = remoteResponse?.id ? `MSG-${String(remoteResponse.id).slice(0, 8).toUpperCase()}` : `MSG-${Math.floor(90500 + Math.random() * 900)}`;
   const newMessage = {
-    id: remoteResponse?.id || newMsgId, senderId: CURRENT_USER_ID, receiverId: reqContactId, studentId: reqStudentId, subjectId: resolvedSubjectId,
+    id: remoteResponse?.id || newMsgId, senderId: activeUserId, receiverId: reqContactId, studentId: reqStudentId, subjectId: resolvedSubjectId,
     topic: selectedTopic, content, createdAt: remoteResponse?.createdAt || new Date().toISOString(),
     traceId: telemetry.traceId, idempotencyKey: telemetry.idempotencyKey, status: persistedRemotely ? 'SINCRONIZADO' : 'PENDIENTE DE SINCRONIZACIÓN'
   };
@@ -268,9 +270,17 @@ async function updateBackendStatus() {
   if (telemetryState) telemetryState.textContent = isBackendOnline ? 'Conectado (HTTP 200 · :8085)' : 'Modo Resiliente Local (Buffer Activo)';
 }
 export function mount() {
-  if (typeof window !== 'undefined' && (window.self !== window.top || window.location.search.includes('embedded=1'))) document.body?.classList?.add('is-embedded');
-  const urlRole = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('role')?.toUpperCase() : '';
-  if (urlRole === 'DOCENTE') {
+  const isEmbedded = typeof window !== 'undefined' && window.parent && window.parent !== window;
+  if (isEmbedded) document.body?.classList?.add('is-embedded');
+  else if (typeof document !== 'undefined' && document.body && !document.getElementById('shell-standalone-banner')) {
+    const banner = document.createElement('div');
+    banner.id = 'shell-standalone-banner';
+    banner.setAttribute('role', 'status');
+    banner.style.cssText = 'padding:10px 16px;background:#fef3c7;color:#92400e;font-size:13px;border-bottom:1px solid #fde68a;display:flex;justify-content:space-between;align-items:center;';
+    banner.innerHTML = `<span>Sign in through the EduTrack shell to load your verified institutional session.</span><a href="${escapeHtml(SHELL_ORIGIN)}" style="font-weight:700;color:#92400e;text-decoration:underline;">Open EduTrack Shell</a>`;
+    document.body.prepend(banner);
+  }
+  const applyDocenteView = () => {
     const guardianNames = ['Sra. María López (Acudiente de Juan S.)', 'Sr. Roberto Gómez (Acudiente de Ana G.)', 'Sra. Elena Torres (Acudiente de Sofía T.)', 'Mag. Juan Pérez (Coordinación)'];
     const guardianRoles = ['Madre de Juan Sebastián · 10°A', 'Padre de Ana Sofía · 10°A', 'Madre de Sofía Valentina · 10°A', 'Coordinador Académico · 10°A'];
     const guardianAvatars = ['ML', 'RG', 'ET', 'JP'];
@@ -279,6 +289,29 @@ export function mount() {
     if (subEl) subEl.textContent = 'Familias y Acudientes · Grado 10°A';
     if (badgeEl) badgeEl.textContent = '4 Familias';
     if (inputEl) inputEl.placeholder = 'Escriba su mensaje o citación para el acudiente...';
+    renderConversationsList(); renderActiveThreadHeader();
+  };
+  if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    if (isEmbedded && typeof document !== 'undefined' && document.body && !document.getElementById('shell-auth-gate')) {
+      const gate = document.createElement('div');
+      gate.id = 'shell-auth-gate';
+      gate.setAttribute('role', 'status');
+      gate.style.cssText = 'padding:10px 16px;background:#eff6ff;color:#1e40af;font-size:13px;border-bottom:1px solid #bfdbfe;';
+      gate.textContent = 'Synchronizing verified session context with EduTrack shell...';
+      document.body.prepend(gate);
+    }
+    window.addEventListener('message', (event) => {
+      const ctx = extractShellContext(event);
+      if (!ctx) return;
+      document.getElementById('shell-auth-gate')?.remove();
+      if (ctx.userId) activeUserId = ctx.userId;
+      if (ctx.role === 'DOCENTE') applyDocenteView();
+      if (ctx.view === 'announcements' || ctx.view === 'messages' || ctx.view === 'reads') switchView(ctx.view);
+      loadConversation();
+    });
+    if (isEmbedded && typeof window.parent.postMessage === 'function') {
+      try { window.parent.postMessage({ type: 'edutrack:ready' }, SHELL_ORIGIN); } catch { /* noop */ }
+    }
   }
   document.querySelectorAll('.nav-menu .nav-item').forEach((item) => item.addEventListener('click', (e) => { e.preventDefault(); const v = item.getAttribute('data-view'); if (v) switchView(v); }));
   document.getElementById('btn-refresh')?.addEventListener('click', () => { updateBackendStatus(); loadConversation(); renderAnnouncements(); renderReadReceiptsView(readReceiptsList, readsSearchQuery); showToast('Bandeja institucional sincronizada', 'success'); });
@@ -320,7 +353,7 @@ export function mount() {
       `Docente Interlocutor: ${teacher.name} (${teacher.role}) · ${teacher.email}`,
       `Fecha de Emisión: ${new Date().toLocaleString('es-CO')}`,
       '--------------------------------------------------------------------',
-      ...msgs.map((m) => `[${new Date(m.createdAt).toLocaleString('es-CO')}] ${m.senderId === CURRENT_USER_ID ? 'Acudiente (Ximena Zambrano)' : teacher.name} (${m.topic || 'Consulta'}):\n${m.content}\nTraza W3C: ${m.traceId || '4bf92f3577b34da6a3ce929d0e0e4736'}\n`)
+      ...msgs.map((m) => `[${new Date(m.createdAt).toLocaleString('es-CO')}] ${(m.senderId === activeUserId || m.senderId === CURRENT_USER_ID) ? 'Acudiente (Ximena Zambrano)' : teacher.name} (${m.topic || 'Consulta'}):\n${m.content}\nTraza W3C: ${m.traceId || '4bf92f3577b34da6a3ce929d0e0e4736'}\n`)
     ];
     const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }), url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = `Historial_EduTrack_${student.code}_${teacher.name.replace(/\s+/g, '_')}.txt`; a.click();
