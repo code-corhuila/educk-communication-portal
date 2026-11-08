@@ -33,7 +33,7 @@ export function extractShellContext(event, trustedUrl = SHELL_ORIGIN) {
   const role = typeof data.role === 'string' ? data.role.trim().toUpperCase() : '';
   if (!ALLOWED_ROLES.has(role)) return null;
   setPortalAccessToken(data.token);
-  return { token: data.token, role, user: data.user || null, view: data.view || '' };
+  return { token: data.token, role, user: data.user || null, userId: data.user?.id || '', view: data.view || '' };
 }
 const DEFAULT_API_URL =
   typeof window !== 'undefined' &&

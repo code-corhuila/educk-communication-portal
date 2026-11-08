@@ -304,9 +304,11 @@ export function mount() {
       const ctx = extractShellContext(event);
       if (!ctx) return;
       document.getElementById('shell-auth-gate')?.remove();
-      if (ctx.userId) activeUserId = ctx.userId;
+      const uid = ctx.userId || ctx.user?.id;
+      if (uid) activeUserId = uid;
       if (ctx.role === 'DOCENTE') applyDocenteView();
-      if (ctx.view === 'announcements' || ctx.view === 'messages' || ctx.view === 'reads') switchView(ctx.view);
+      const mappedView = { announcements: 'canales', messages: 'mensajeria', reads: 'lecturas', canales: 'canales', mensajeria: 'mensajeria', lecturas: 'lecturas', contactos: 'contactos' }[ctx.view];
+      if (mappedView) switchView(mappedView);
       loadConversation();
     });
     if (isEmbedded && typeof window.parent.postMessage === 'function') {
