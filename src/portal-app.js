@@ -306,6 +306,8 @@ export function mount() {
       document.getElementById('shell-auth-gate')?.remove();
       const uid = ctx.userId || ctx.user?.id;
       if (uid) activeUserId = uid;
+      if (ctx.user?.name) activeUserName = ctx.user.name;
+      activeRole = ctx.role || activeRole;
       if (ctx.role === 'DOCENTE') applyDocenteView();
       const mappedView = { announcements: 'canales', messages: 'mensajeria', reads: 'lecturas', canales: 'canales', mensajeria: 'mensajeria', lecturas: 'lecturas', contactos: 'contactos' }[ctx.view];
       if (mappedView) switchView(mappedView);
@@ -355,7 +357,7 @@ export function mount() {
       `Docente Interlocutor: ${teacher.name} (${teacher.role}) · ${teacher.email}`,
       `Fecha de Emisión: ${new Date().toLocaleString('es-CO')}`,
       '--------------------------------------------------------------------',
-      ...msgs.map((m) => `[${new Date(m.createdAt).toLocaleString('es-CO')}] ${(m.senderId === activeUserId || m.senderId === CURRENT_USER_ID) ? 'Acudiente (Ximena Zambrano)' : teacher.name} (${m.topic || 'Consulta'}):\n${m.content}\nTraza W3C: ${m.traceId || '4bf92f3577b34da6a3ce929d0e0e4736'}\n`)
+      ...msgs.map((m) => `[${new Date(m.createdAt).toLocaleString('es-CO')}] ${(m.senderId === activeUserId || m.senderId === CURRENT_USER_ID) ? `${activeRole} (${activeUserName})` : teacher.name} (${m.topic || 'Consulta'}):\n${m.content}\nTraza W3C: ${m.traceId || '4bf92f3577b34da6a3ce929d0e0e4736'}\n`)
     ];
     const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' }), url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = `Historial_EduTrack_${student.code}_${teacher.name.replace(/\s+/g, '_')}.txt`; a.click();
