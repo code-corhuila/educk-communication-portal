@@ -17,8 +17,8 @@ export default defineConfig({
       name: 'communication_portal',
       filename: 'remoteEntry.js',
       exposes: {
-        './CommunicationApp': './src/app.js',
-        './CommunicationStyles': './src/style.css'
+        './CommunicationApp': './src/portal-app.js',
+        './CommunicationStyles': './src/workspace.css'
       },
       shared: []
     })
